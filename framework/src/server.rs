@@ -41,7 +41,7 @@ impl Server {
     }
 
     /// Start the server on the given address
-    pub async fn run(self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn run(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Default to localhost:8000
         let addr: SocketAddr = self.get_addr();
         let listener = TcpListener::bind(addr).await?;

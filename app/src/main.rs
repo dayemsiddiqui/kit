@@ -10,6 +10,7 @@ async fn main() {
         .get("/users/{id}", controllers::user::show);
 
     Server::new(router)
+        .port(8080)
         .run()
         .await
         .expect("Failed to start server");
