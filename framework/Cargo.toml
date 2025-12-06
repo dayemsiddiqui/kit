@@ -1,0 +1,16 @@
+[package]
+name = "kit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "A Laravel-inspired web framework for Rust"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+http = "1"
+matchit = "0.8"
+async-trait = "0.1"
+bytes = "1"
