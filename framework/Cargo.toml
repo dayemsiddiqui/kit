@@ -1,9 +1,14 @@
 [package]
-name = "kit"
+name = "kit-rs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "A Laravel-inspired web framework for Rust"
+repository = "https://github.com/dayemsiddiqui/kit"
+homepage = "https://github.com/dayemsiddiqui/kit"
+keywords = ["web", "framework", "async", "http", "server"]
+categories = ["web-programming::http-server", "asynchronous"]
+readme = "README.md"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
