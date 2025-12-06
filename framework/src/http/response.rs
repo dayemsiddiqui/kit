@@ -26,11 +26,11 @@ impl Response {
         }
     }
 
-    /// Create a JSON response
-    pub fn json(body: impl Into<String>) -> Self {
+    /// Create a JSON response from a serde_json::Value
+    pub fn json(body: serde_json::Value) -> Self {
         Self {
             status: 200,
-            body: body.into(),
+            body: body.to_string(),
             headers: vec![("Content-Type".to_string(), "application/json".to_string())],
         }
     }

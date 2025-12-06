@@ -15,7 +15,7 @@ tokio = { version = "1", features = ["full"] }
 ## Quick Start
 
 ```rust
-use kit::{Router, Server, Request, Response};
+use kit::{json_response, Router, Server, Request, Response};
 
 #[tokio::main]
 async fn main() {
@@ -36,7 +36,10 @@ async fn index(_req: Request) -> Response {
 
 async fn show_user(req: Request) -> Response {
     let id = req.param("id").unwrap_or_default();
-    Response::json(format!(r#"{{"id": "{}"}}"#, id))
+    json_response!({
+        "id": id,
+        "name": format!("User {}", id)
+    })
 }
 ```
 
