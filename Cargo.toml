@@ -4,6 +4,7 @@ members = [
     "framework",
     "app",
     "kit-cli",
+    "kit-macros",
 ]
 
 [workspace.package]

@@ -477,6 +477,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kit-macros"
+version = "0.1.4"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "kit-rs"
 version = "0.1.4"
 dependencies = [
@@ -486,6 +495,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
+ "kit-macros",
  "matchit",
  "serde_json",
  "tokio",
