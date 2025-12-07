@@ -1,8 +1,14 @@
-use kit::{inertia_response, Request, Response};
+use kit::{inertia_response, InertiaProps, Request, Response};
+
+#[derive(InertiaProps)]
+pub struct HomeProps {
+    pub title: String,
+    pub message: String,
+}
 
 pub async fn index(_req: Request) -> Response {
-    inertia_response!("Home", {
-        "title": "Welcome to Kit!",
-        "message": "Your Inertia + React app is ready."
+    inertia_response!("Home", HomeProps {
+        title: "Welcome to Kit!".to_string(),
+        message: "Your Inertia + React app is ready.".to_string(),
     })
 }

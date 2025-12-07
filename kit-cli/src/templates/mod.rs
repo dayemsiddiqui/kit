@@ -53,6 +53,10 @@ pub fn home_page() -> &'static str {
     include_str!("files/frontend/src/pages/Home.tsx.tpl")
 }
 
+pub fn inertia_props_types() -> &'static str {
+    include_str!("files/frontend/src/types/inertia-props.ts.tpl")
+}
+
 // Root templates
 
 pub fn gitignore() -> &'static str {

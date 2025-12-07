@@ -1,7 +1,4 @@
-interface HomeProps {
-  title: string
-  message: string
-}
+import type { HomeProps } from '../types/inertia-props'
 
 export default function Home({ title, message }: HomeProps) {
   return (

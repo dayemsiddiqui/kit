@@ -1,14 +1,4 @@
-interface HomeProps {
-  title: string
-  user: {
-    name: string
-    email: string
-  }
-  stats: {
-    visits: number
-    likes: number
-  }
-}
+import {HomeProps} from "../types/inertia-props.ts";
 
 export default function Home({ title, user, stats }: HomeProps) {
   return (

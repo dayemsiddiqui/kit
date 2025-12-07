@@ -154,6 +154,8 @@ fn create_project(
     // Frontend directories
     fs::create_dir_all(project_path.join("frontend/src/pages"))
         .map_err(|e| format!("Failed to create directories: {}", e))?;
+    fs::create_dir_all(project_path.join("frontend/src/types"))
+        .map_err(|e| format!("Failed to create directories: {}", e))?;
 
     // Public assets directory (for production builds)
     fs::create_dir_all(project_path.join("public/assets"))
@@ -228,6 +230,13 @@ fn create_project(
         templates::home_page(),
     )
     .map_err(|e| format!("Failed to write frontend/src/pages/Home.tsx: {}", e))?;
+
+    // Write frontend/src/types/inertia-props.ts
+    fs::write(
+        project_path.join("frontend/src/types/inertia-props.ts"),
+        templates::inertia_props_types(),
+    )
+    .map_err(|e| format!("Failed to write frontend/src/types/inertia-props.ts: {}", e))?;
 
     // Initialize git repository
     if !no_git {

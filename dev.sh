@@ -13,6 +13,10 @@ if [ ! -d "app/frontend/node_modules" ]; then
     (cd app/frontend && npm install)
 fi
 
+# Generate TypeScript types from InertiaProps
+echo "Generating TypeScript types..."
+(cd app && ../target/debug/kit generate-types 2>/dev/null || true)
+
 # Start Vite dev server in background
 echo "Starting Vite dev server on http://localhost:5173..."
 (cd app/frontend && npm run dev) &
