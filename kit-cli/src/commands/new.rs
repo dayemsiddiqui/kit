@@ -38,17 +38,11 @@ pub fn run(name: Option<String>, no_interaction: bool, no_git: bool) {
     println!();
     println!("Next steps:");
     println!("  {} {}", style("cd").cyan(), project_name);
-    println!("  {}", style("cd frontend && npm install").cyan());
-    println!("  {}", style("npm run dev").cyan());
-    println!(
-        "  {} {}",
-        style("cargo run").cyan(),
-        style("(in a new terminal)").dim()
-    );
+    println!("  {}", style("kit serve").cyan());
     println!();
     println!(
         "Backend will be at {}",
-        style("http://localhost:8080").underlined()
+        style("http://localhost:8000").underlined()
     );
     println!(
         "Frontend dev server at {}",
