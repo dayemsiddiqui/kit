@@ -31,6 +31,20 @@ pub fn home_controller() -> &'static str {
     include_str!("files/backend/controllers/home.rs.tpl")
 }
 
+// Config templates
+
+pub fn config_mod() -> &'static str {
+    include_str!("files/backend/config/mod.rs.tpl")
+}
+
+pub fn config_database() -> &'static str {
+    include_str!("files/backend/config/database.rs.tpl")
+}
+
+pub fn config_mail() -> &'static str {
+    include_str!("files/backend/config/mail.rs.tpl")
+}
+
 // Frontend templates
 
 pub fn package_json(project_name: &str) -> String {
@@ -65,4 +79,12 @@ pub fn inertia_props_types() -> &'static str {
 
 pub fn gitignore() -> &'static str {
     include_str!("files/root/gitignore.tpl")
+}
+
+pub fn env(project_name: &str) -> String {
+    include_str!("files/root/env.tpl").replace("{project_name}", project_name)
+}
+
+pub fn env_example() -> &'static str {
+    include_str!("files/root/env.example.tpl")
 }

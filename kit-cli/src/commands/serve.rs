@@ -166,6 +166,32 @@ fn ensure_npm_dependencies() -> Result<(), String> {
 }
 
 pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: bool, skip_types: bool) {
+    // Load .env file from current directory
+    let _ = dotenvy::dotenv();
+
+    // Resolve ports: CLI args take precedence, then env vars, then defaults
+    let backend_port = if port != 8080 {
+        // CLI argument was explicitly provided (different from default)
+        port
+    } else {
+        // Use env var or default
+        std::env::var("SERVER_PORT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(port)
+    };
+
+    let vite_port = if frontend_port != 5173 {
+        // CLI argument was explicitly provided
+        frontend_port
+    } else {
+        // Use env var or default
+        std::env::var("VITE_PORT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(frontend_port)
+    };
+
     println!();
     println!(
         "{}",
@@ -241,11 +267,9 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
         println!(
             "{} Backend server on http://127.0.0.1:{}",
             style("[backend]").magenta().bold(),
-            port
+            backend_port
         );
 
-        // TODO: Pass port via KIT_PORT environment variable when supported
-        let _ = port; // Port configuration to be implemented
         if let Err(e) = manager.spawn_with_prefix(
             "cargo",
             &["watch", "-x", "run"],
@@ -263,11 +287,9 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
         println!(
             "{} Frontend server on http://127.0.0.1:{}",
             style("[frontend]").cyan().bold(),
-            frontend_port
+            vite_port
         );
 
-        // TODO: Pass frontend_port via VITE_PORT when supported
-        let _ = frontend_port; // Frontend port configuration to be implemented
         let frontend_path = Path::new("frontend");
 
         if let Err(e) = manager.spawn_with_prefix(

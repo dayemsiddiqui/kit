@@ -9,5 +9,6 @@ pub fn register() -> Router {
         .get("/users/{id}", controllers::user::show).name("users.show")
         .post("/users", controllers::user::store).name("users.store")
         .get("/redirect-example", controllers::user::redirect_example)
+        .get("/config", controllers::config_example::show).name("config.show")
         .into()
 }

@@ -150,6 +150,8 @@ fn create_project(
     // Backend directories
     fs::create_dir_all(project_path.join("src/controllers"))
         .map_err(|e| format!("Failed to create directories: {}", e))?;
+    fs::create_dir_all(project_path.join("src/config"))
+        .map_err(|e| format!("Failed to create directories: {}", e))?;
 
     // Frontend directories
     fs::create_dir_all(project_path.join("frontend/src/pages"))
@@ -172,6 +174,14 @@ fn create_project(
     fs::write(project_path.join(".gitignore"), templates::gitignore())
         .map_err(|e| format!("Failed to write .gitignore: {}", e))?;
 
+    // Write .env
+    fs::write(project_path.join(".env"), templates::env(project_name))
+        .map_err(|e| format!("Failed to write .env: {}", e))?;
+
+    // Write .env.example
+    fs::write(project_path.join(".env.example"), templates::env_example())
+        .map_err(|e| format!("Failed to write .env.example: {}", e))?;
+
     // Write src/main.rs
     fs::write(project_path.join("src/main.rs"), templates::main_rs())
         .map_err(|e| format!("Failed to write src/main.rs: {}", e))?;
@@ -193,6 +203,27 @@ fn create_project(
         templates::home_controller(),
     )
     .map_err(|e| format!("Failed to write src/controllers/home.rs: {}", e))?;
+
+    // Write src/config/mod.rs
+    fs::write(
+        project_path.join("src/config/mod.rs"),
+        templates::config_mod(),
+    )
+    .map_err(|e| format!("Failed to write src/config/mod.rs: {}", e))?;
+
+    // Write src/config/database.rs
+    fs::write(
+        project_path.join("src/config/database.rs"),
+        templates::config_database(),
+    )
+    .map_err(|e| format!("Failed to write src/config/database.rs: {}", e))?;
+
+    // Write src/config/mail.rs
+    fs::write(
+        project_path.join("src/config/mail.rs"),
+        templates::config_mail(),
+    )
+    .map_err(|e| format!("Failed to write src/config/mail.rs: {}", e))?;
 
     // === Frontend files ===
 

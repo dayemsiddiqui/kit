@@ -1,0 +1,26 @@
+APP_NAME="{project_name}"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8080
+
+SERVER_HOST=127.0.0.1
+SERVER_PORT=8080
+
+VITE_PORT=5173
+
+# Database
+DB_DRIVER=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_DATABASE=kit_app
+DB_USERNAME=
+DB_PASSWORD=
+
+# Mail
+MAIL_DRIVER=smtp
+MAIL_HOST=localhost
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_FROM_ADDRESS=hello@example.com
+MAIL_FROM_NAME="Kit App"

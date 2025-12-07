@@ -16,3 +16,4 @@ frontend/dist
 # Environment
 .env
 .env.local
+.env.*.local

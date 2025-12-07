@@ -1,16 +1,21 @@
+mod config;
 mod controllers;
 mod routes;
 
-use kit::Server;
+use kit::{Config, Server};
 
 #[tokio::main]
 async fn main() {
+    // Initialize framework configuration (loads .env files)
+    Config::init(std::path::Path::new("."));
+
+    // Register application configs
+    config::register_all();
+
     let router = routes::register();
 
-    println!("Server running at http://localhost:8080");
-
-    Server::new(router)
-        .port(8080)
+    // Create server with configuration from environment
+    Server::from_config(router)
         .run()
         .await
         .expect("Failed to start server");

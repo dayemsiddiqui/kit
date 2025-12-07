@@ -1,3 +1,4 @@
+use crate::config::{Config, ServerConfig};
 use crate::http::{HttpResponse, Request};
 use crate::inertia::InertiaContext;
 use crate::routing::Router;
@@ -23,6 +24,15 @@ impl Server {
             router: Arc::new(router.into()),
             host: "127.0.0.1".to_string(),
             port: 8000,
+        }
+    }
+
+    pub fn from_config(router: impl Into<Router>) -> Self {
+        let config = Config::get::<ServerConfig>().unwrap_or_else(ServerConfig::from_env);
+        Self {
+            router: Arc::new(router.into()),
+            host: config.host,
+            port: config.port,
         }
     }
     

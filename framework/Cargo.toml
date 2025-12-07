@@ -22,3 +22,4 @@ bytes = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 kit-macros = { path = "../kit-macros", version = "0.1" }
+dotenvy = "0.15"
