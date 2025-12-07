@@ -1,10 +1,13 @@
 use console::style;
+use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::channel;
 use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 
 struct ProcessManager {
     children: Vec<Child>,
@@ -162,7 +165,7 @@ fn ensure_npm_dependencies() -> Result<(), String> {
     Ok(())
 }
 
-pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: bool) {
+pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: bool, skip_types: bool) {
     println!();
     println!(
         "{}",
@@ -174,6 +177,36 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
     if let Err(e) = validate_kit_project(backend_only, frontend_only) {
         eprintln!("{} {}", style("Error:").red().bold(), e);
         std::process::exit(1);
+    }
+
+    // Generate TypeScript types on startup (unless skipped or frontend-only)
+    if !skip_types && !frontend_only {
+        let project_path = Path::new(".");
+        let output_path = project_path.join("frontend/src/types/inertia-props.ts");
+
+        println!("{}", style("Generating TypeScript types...").cyan());
+        match super::generate_types::generate_types_to_file(project_path, &output_path) {
+            Ok(0) => {
+                println!("{}", style("No InertiaProps structs found (skipping type generation)").dim());
+            }
+            Ok(count) => {
+                println!(
+                    "{} Generated {} type(s) to {}",
+                    style("✓").green(),
+                    count,
+                    output_path.display()
+                );
+            }
+            Err(e) => {
+                // Don't fail, just warn - types are a nice-to-have
+                eprintln!(
+                    "{} Failed to generate types: {} (continuing anyway)",
+                    style("Warning:").yellow(),
+                    e
+                );
+            }
+        }
+        println!();
     }
 
     // Ensure cargo-watch is installed (only if running backend)
@@ -250,6 +283,14 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
         }
     }
 
+    // Start file watcher for TypeScript type regeneration
+    if !skip_types && !frontend_only {
+        let shutdown_watcher = manager.shutdown.clone();
+        thread::spawn(move || {
+            start_type_watcher(shutdown_watcher);
+        });
+    }
+
     println!();
     println!("{}", style("Press Ctrl+C to stop all servers").dim());
     println!();
@@ -267,4 +308,94 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
 
     manager.shutdown_all();
     println!("{}", style("Servers stopped.").green());
+}
+
+/// File watcher that regenerates TypeScript types when Rust files change
+fn start_type_watcher(shutdown: Arc<AtomicBool>) {
+    let (tx, rx) = channel();
+    let src_path = Path::new("src");
+
+    let watcher_result = RecommendedWatcher::new(
+        move |res| {
+            if let Ok(event) = res {
+                let _ = tx.send(event);
+            }
+        },
+        Config::default().with_poll_interval(Duration::from_secs(2)),
+    );
+
+    let mut watcher = match watcher_result {
+        Ok(w) => w,
+        Err(e) => {
+            eprintln!(
+                "{} Failed to start type watcher: {}",
+                style("[types]").yellow(),
+                e
+            );
+            return;
+        }
+    };
+
+    if let Err(e) = watcher.watch(src_path, RecursiveMode::Recursive) {
+        eprintln!(
+            "{} Failed to watch src directory: {}",
+            style("[types]").yellow(),
+            e
+        );
+        return;
+    }
+
+    println!(
+        "{} Watching for Rust file changes to regenerate types",
+        style("[types]").blue()
+    );
+
+    let project_path = Path::new(".");
+    let output_path = project_path.join("frontend/src/types/inertia-props.ts");
+
+    // Debounce timer to avoid regenerating too frequently
+    let mut last_regen = std::time::Instant::now();
+    let debounce_duration = Duration::from_millis(500);
+
+    loop {
+        if shutdown.load(Ordering::SeqCst) {
+            break;
+        }
+
+        // Use recv_timeout to periodically check shutdown
+        match rx.recv_timeout(Duration::from_millis(100)) {
+            Ok(event) => {
+                // Check if it's a Rust file change
+                let is_rust_change = event
+                    .paths
+                    .iter()
+                    .any(|p| p.extension().map(|e| e == "rs").unwrap_or(false));
+
+                if is_rust_change && last_regen.elapsed() > debounce_duration {
+                    last_regen = std::time::Instant::now();
+
+                    match super::generate_types::generate_types_to_file(project_path, &output_path)
+                    {
+                        Ok(count) if count > 0 => {
+                            println!(
+                                "{} Regenerated {} type(s)",
+                                style("[types]").blue(),
+                                count
+                            );
+                        }
+                        Ok(_) => {} // No types found, stay quiet
+                        Err(e) => {
+                            eprintln!(
+                                "{} Failed to regenerate: {}",
+                                style("[types]").yellow(),
+                                e
+                            );
+                        }
+                    }
+                }
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+        }
+    }
 }

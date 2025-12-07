@@ -12,8 +12,12 @@ pub use server::Server;
 #[doc(hidden)]
 pub use serde_json;
 
-// Re-export the proc-macro for compile-time component validation
+// Re-export serde for InertiaProps derive macro
+pub use serde;
+
+// Re-export the proc-macros for compile-time component validation and type safety
 pub use kit_macros::inertia_response;
+pub use kit_macros::InertiaProps;
 
 #[macro_export]
 macro_rules! json_response {

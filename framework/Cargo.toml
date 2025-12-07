@@ -19,5 +19,6 @@ http = "1"
 matchit = "0.8"
 async-trait = "0.1"
 bytes = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 kit-macros = { path = "../kit-macros" }

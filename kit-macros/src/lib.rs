@@ -1,14 +1,75 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{parse::Parse, parse::ParseStream, parse_macro_input, Expr, LitStr, Token};
+use syn::{parse::Parse, parse::ParseStream, parse_macro_input, DeriveInput, Expr, LitStr, Token};
 use std::path::PathBuf;
+
+#[proc_macro_derive(InertiaProps)]
+pub fn derive_inertia_props(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    // Extract field information for generating Serialize impl
+    let fields = match &input.data {
+        syn::Data::Struct(data) => match &data.fields {
+            syn::Fields::Named(fields) => &fields.named,
+            _ => {
+                return syn::Error::new_spanned(
+                    &input,
+                    "InertiaProps only supports structs with named fields",
+                )
+                .to_compile_error()
+                .into();
+            }
+        },
+        _ => {
+            return syn::Error::new_spanned(&input, "InertiaProps can only be derived for structs")
+                .to_compile_error()
+                .into();
+        }
+    };
+
+    let field_count = fields.len();
+    let field_names: Vec<_> = fields.iter().map(|f| &f.ident).collect();
+    let field_name_strings: Vec<_> = fields
+        .iter()
+        .map(|f| f.ident.as_ref().unwrap().to_string())
+        .collect();
+
+    let expanded = quote! {
+        impl #impl_generics ::kit::serde::Serialize for #name #ty_generics #where_clause {
+            fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
+            where
+                S: ::kit::serde::Serializer,
+            {
+                use ::kit::serde::ser::SerializeStruct;
+                let mut state = serializer.serialize_struct(stringify!(#name), #field_count)?;
+                #(
+                    state.serialize_field(#field_name_strings, &self.#field_names)?;
+                )*
+                state.end()
+            }
+        }
+    };
+
+    expanded.into()
+}
+
+/// Props can be either a typed struct expression or JSON-like syntax
+enum PropsKind {
+    /// Typed struct: `HomeProps { title: "Welcome".into(), user }`
+    Typed(Expr),
+    /// JSON-like syntax: `{ "title": "Welcome" }`
+    Json(proc_macro2::TokenStream),
+}
 
 /// Custom parser for inertia_response! arguments
 struct InertiaResponseInput {
     component: LitStr,
     _comma: Token![,],
-    props: proc_macro2::TokenStream,
+    props: PropsKind,
     config: Option<ConfigArg>,
 }
 
@@ -22,10 +83,20 @@ impl Parse for InertiaResponseInput {
         let component: LitStr = input.parse()?;
         let comma: Token![,] = input.parse()?;
 
-        // Parse the braced props content
-        let props_content;
-        syn::braced!(props_content in input);
-        let props: proc_macro2::TokenStream = props_content.parse()?;
+        // Determine if this is a typed struct or JSON syntax
+        // Typed struct: identifier followed by { }
+        // JSON syntax: directly { }
+        let props = if input.peek(syn::Ident) {
+            // This is a typed struct expression: `HomeProps { ... }`
+            let expr: Expr = input.parse()?;
+            PropsKind::Typed(expr)
+        } else {
+            // This is JSON-like syntax: `{ "key": value }`
+            let props_content;
+            syn::braced!(props_content in input);
+            let props_tokens: proc_macro2::TokenStream = props_content.parse()?;
+            PropsKind::Json(props_tokens)
+        };
 
         // Check for optional config argument
         let config = if input.peek(Token![,]) {
@@ -51,6 +122,19 @@ impl Parse for InertiaResponseInput {
 /// Create an Inertia response with compile-time component validation
 ///
 /// # Examples
+///
+/// ## With typed struct (recommended for type safety):
+/// ```rust,ignore
+/// #[derive(InertiaProps)]
+/// struct HomeProps {
+///     title: String,
+///     user: User,
+/// }
+///
+/// inertia_response!("Home", HomeProps { title: "Welcome".into(), user })
+/// ```
+///
+/// ## With JSON-like syntax (for quick prototyping):
 /// ```rust,ignore
 /// inertia_response!("Dashboard", { "user": { "name": "John" } })
 /// ```
@@ -63,18 +147,34 @@ pub fn inertia_response(input: TokenStream) -> TokenStream {
 
     let component_name = input.component.value();
     let component_lit = &input.component;
-    let props = input.props;
 
     // Validate the component exists at compile time
     if let Err(err) = validate_component_exists(&component_name, component_lit.span()) {
         return err.to_compile_error().into();
     }
 
+    // Generate props conversion based on props kind
+    let props_expr = match &input.props {
+        PropsKind::Typed(expr) => {
+            // Typed struct: serialize using serde_json::to_value
+            quote! {
+                ::kit::serde_json::to_value(&#expr)
+                    .expect("Failed to serialize InertiaProps")
+            }
+        }
+        PropsKind::Json(tokens) => {
+            // JSON-like syntax: use serde_json::json! macro
+            quote! {
+                ::kit::serde_json::json!({#tokens})
+            }
+        }
+    };
+
     // Generate the appropriate expansion based on whether config is provided
     let expanded = if let Some(config) = input.config {
         let config_expr = config.expr;
         quote! {{
-            let props = ::kit::serde_json::json!({#props});
+            let props = #props_expr;
             let url = ::kit::InertiaContext::current_path();
             let response = ::kit::InertiaResponse::new(#component_lit, props, url)
                 .with_config(#config_expr);
@@ -87,7 +187,7 @@ pub fn inertia_response(input: TokenStream) -> TokenStream {
         }}
     } else {
         quote! {{
-            let props = ::kit::serde_json::json!({#props});
+            let props = #props_expr;
             let url = ::kit::InertiaContext::current_path();
             let response = ::kit::InertiaResponse::new(#component_lit, props, url);
 

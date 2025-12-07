@@ -43,6 +43,20 @@ enum Commands {
         /// Only start frontend server
         #[arg(long)]
         frontend_only: bool,
+
+        /// Skip TypeScript type generation
+        #[arg(long)]
+        skip_types: bool,
+    },
+    /// Generate TypeScript types from Rust InertiaProps structs
+    GenerateTypes {
+        /// Output file path (default: frontend/src/types/inertia-props.ts)
+        #[arg(long, short = 'o')]
+        output: Option<String>,
+
+        /// Watch for changes and regenerate
+        #[arg(long, short = 'w')]
+        watch: bool,
     },
 }
 
@@ -62,8 +76,12 @@ fn main() {
             frontend_port,
             backend_only,
             frontend_only,
+            skip_types,
         } => {
-            commands::serve::run(port, frontend_port, backend_only, frontend_only);
+            commands::serve::run(port, frontend_port, backend_only, frontend_only, skip_types);
+        }
+        Commands::GenerateTypes { output, watch } => {
+            commands::generate_types::run(output, watch);
         }
     }
 }
