@@ -50,4 +50,35 @@ impl Request {
     pub fn inner(&self) -> &hyper::Request<hyper::body::Incoming> {
         &self.inner
     }
+
+    /// Get a header value by name
+    pub fn header(&self, name: &str) -> Option<&str> {
+        self.inner
+            .headers()
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+    }
+
+    /// Check if this is an Inertia XHR request
+    pub fn is_inertia(&self) -> bool {
+        self.header("X-Inertia")
+            .map(|v| v == "true")
+            .unwrap_or(false)
+    }
+
+    /// Get the Inertia version from request headers
+    pub fn inertia_version(&self) -> Option<&str> {
+        self.header("X-Inertia-Version")
+    }
+
+    /// Get partial component name for partial reloads
+    pub fn inertia_partial_component(&self) -> Option<&str> {
+        self.header("X-Inertia-Partial-Component")
+    }
+
+    /// Get partial data keys for partial reloads
+    pub fn inertia_partial_data(&self) -> Option<Vec<&str>> {
+        self.header("X-Inertia-Partial-Data")
+            .map(|v| v.split(',').collect())
+    }
 }

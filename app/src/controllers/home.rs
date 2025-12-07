@@ -1,7 +1,15 @@
-use kit::{text_response, Request, Response, ResponseExt};
+use kit::{inertia_response, Request, Response};
 
 pub async fn index(_req: Request) -> Response {
-    text_response!("Welcome to Kit!")
-        .status(200)
-        .header("content-type", "text/html")
+    inertia_response!("Home", {
+        "title": "Welcome to Kit!",
+        "user": {
+            "name": "John Doe",
+            "email": "john@example.com"
+        },
+        "stats": {
+            "visits": 1234,
+            "likes": 567
+        }
+    })
 }

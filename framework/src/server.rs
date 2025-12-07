@@ -1,4 +1,5 @@
 use crate::http::{HttpResponse, Request};
+use crate::inertia::InertiaContext;
 use crate::routing::Router;
 use bytes::Bytes;
 use http_body_util::Full;
@@ -72,7 +73,27 @@ async fn handle_request(
     let method = req.method().clone();
     let path = req.uri().path().to_string();
 
-    match router.match_route(&method, &path) {
+    // Set up Inertia context from request headers
+    let is_inertia = req
+        .headers()
+        .get("X-Inertia")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v == "true")
+        .unwrap_or(false);
+
+    let inertia_version = req
+        .headers()
+        .get("X-Inertia-Version")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.to_string());
+
+    InertiaContext::set(InertiaContext {
+        path: path.clone(),
+        is_inertia,
+        version: inertia_version,
+    });
+
+    let response = match router.match_route(&method, &path) {
         Some((handler, params)) => {
             let request = Request::new(req).with_params(params);
             let response = handler(request).await;
@@ -85,5 +106,10 @@ async fn handle_request(
                 .status(404)
                 .into_hyper()
         }
-    }
+    };
+
+    // Clear context after request
+    InertiaContext::clear();
+
+    response
 }
