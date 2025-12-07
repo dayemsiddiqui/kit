@@ -176,6 +176,10 @@ fn create_project(
     fs::write(project_path.join("src/main.rs"), templates::main_rs())
         .map_err(|e| format!("Failed to write src/main.rs: {}", e))?;
 
+    // Write src/routes.rs
+    fs::write(project_path.join("src/routes.rs"), templates::routes_rs())
+        .map_err(|e| format!("Failed to write src/routes.rs: {}", e))?;
+
     // Write src/controllers/mod.rs
     fs::write(
         project_path.join("src/controllers/mod.rs"),

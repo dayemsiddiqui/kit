@@ -19,6 +19,10 @@ pub fn main_rs() -> &'static str {
     include_str!("files/backend/main.rs.tpl")
 }
 
+pub fn routes_rs() -> &'static str {
+    include_str!("files/backend/routes.rs.tpl")
+}
+
 pub fn controllers_mod() -> &'static str {
     include_str!("files/backend/controllers/mod.rs.tpl")
 }

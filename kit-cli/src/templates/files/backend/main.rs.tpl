@@ -1,11 +1,11 @@
 mod controllers;
+mod routes;
 
-use kit::{Router, Server};
+use kit::Server;
 
 #[tokio::main]
 async fn main() {
-    let router = Router::new()
-        .get("/", controllers::home::index);
+    let router = routes::register();
 
     println!("Server running at http://localhost:8080");
 
