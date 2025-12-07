@@ -10,7 +10,6 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
-/// HTTP Server that runs your Kit application
 pub struct Server {
     router: Arc<Router>,
     host: String,
@@ -40,7 +39,6 @@ impl Server {
         SocketAddr::new(self.host.parse().unwrap(), self.port)
     }
 
-    /// Start the server on the given address
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Default to localhost:8000
         let addr: SocketAddr = self.get_addr();

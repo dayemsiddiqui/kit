@@ -6,56 +6,25 @@ pub fn cargo_toml(package_name: &str, description: &str, author: &str) -> String
     };
 
     format!(
-        r#"[package]
-name = "{}"
-version = "0.1.0"
-edition = "2021"
-description = "{}"
-{}
-[dependencies]
-kit = {{ package = "kit-rs", version = "0.1" }}
-tokio = {{ version = "1", features = ["full"] }}
-"#,
-        package_name, description, authors_line
+        include_str!("files/Cargo.toml.tpl"),
+        package_name = package_name,
+        description = description,
+        authors_line = authors_line
     )
 }
 
 pub fn gitignore() -> &'static str {
-    r#"/target
-Cargo.lock
-"#
+    include_str!("files/gitignore.tpl")
 }
 
 pub fn main_rs() -> &'static str {
-    r#"mod controllers;
-
-use kit::{Router, Server};
-
-#[tokio::main]
-async fn main() {
-    let router = Router::new()
-        .get("/", controllers::home::index);
-
-    println!("Server running at http://localhost:8080");
-
-    Server::new(router)
-        .port(8080)
-        .run()
-        .await
-        .expect("Failed to start server");
-}
-"#
+    include_str!("files/main.rs.tpl")
 }
 
 pub fn controllers_mod() -> &'static str {
-    "pub mod home;\n"
+    include_str!("files/controllers_mod.rs.tpl")
 }
 
 pub fn home_controller() -> &'static str {
-    r#"use kit::{text, Request, Response};
-
-pub async fn index(_req: Request) -> Response {
-    text("Welcome to Kit!")
-}
-"#
+    include_str!("files/home_controller.rs.tpl")
 }
