@@ -76,6 +76,27 @@ enum Commands {
         /// Name of the action (e.g., AddTodo, CreateUser)
         name: String,
     },
+    /// Generate a new database migration
+    #[command(name = "make:migration")]
+    MakeMigration {
+        /// Name of the migration (e.g., create_users_table, add_email_to_users)
+        name: String,
+    },
+    /// Run all pending database migrations
+    Migrate,
+    /// Rollback the last database migration(s)
+    #[command(name = "migrate:rollback")]
+    MigrateRollback {
+        /// Number of migrations to rollback
+        #[arg(long, default_value = "1")]
+        step: u32,
+    },
+    /// Show the status of all migrations
+    #[command(name = "migrate:status")]
+    MigrateStatus,
+    /// Drop all tables and re-run all migrations
+    #[command(name = "migrate:fresh")]
+    MigrateFresh,
 }
 
 fn main() {
@@ -109,6 +130,21 @@ fn main() {
         }
         Commands::MakeAction { name } => {
             commands::make_action::run(name);
+        }
+        Commands::MakeMigration { name } => {
+            commands::make_migration::run(name);
+        }
+        Commands::Migrate => {
+            commands::migrate::run();
+        }
+        Commands::MigrateRollback { step } => {
+            commands::migrate_rollback::run(step);
+        }
+        Commands::MigrateStatus => {
+            commands::migrate_status::run();
+        }
+        Commands::MigrateFresh => {
+            commands::migrate_fresh::run();
         }
     }
 }

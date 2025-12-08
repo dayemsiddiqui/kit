@@ -24,3 +24,6 @@ walkdir = "2"
 notify = "6"
 notify-debouncer-mini = "0.4"
 dotenvy = "0.15"
+tokio = { version = "1", features = ["full"] }
+sea-orm-migration = { version = "1.0", features = ["sqlx-sqlite", "sqlx-postgres", "runtime-tokio-native-tls"] }
+chrono = "0.4"
