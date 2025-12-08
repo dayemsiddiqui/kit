@@ -63,7 +63,7 @@ dependencies = [
 
 [[package]]
 name = "app"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "kit-rs",
  "tokio",
@@ -554,7 +554,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "kit-cli"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "clap",
  "console",
@@ -569,7 +569,7 @@ dependencies = [
 
 [[package]]
 name = "kit-macros"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -581,7 +581,7 @@ dependencies = [
 
 [[package]]
 name = "kit-rs"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "async-trait",
  "bytes",
