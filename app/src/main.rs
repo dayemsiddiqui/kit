@@ -16,7 +16,7 @@ async fn main() {
     config::register_all();
 
     // Register services and global middleware
-    bootstrap::register();
+    bootstrap::register().await;
 
     let router = routes::register();
 

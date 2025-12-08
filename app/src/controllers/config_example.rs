@@ -10,11 +10,11 @@ pub async fn show(_req: Request) -> Response {
     json_response!({
         "message": "Config values loaded from .env",
         "database": {
-            "driver": db.driver,
-            "host": db.host,
-            "port": db.port,
-            "database": db.database,
-            "connection_string": db.connection_string()
+            "url": db.url,
+            "max_connections": db.max_connections,
+            "min_connections": db.min_connections,
+            "connect_timeout": db.connect_timeout,
+            "logging": db.logging
         },
         "mail": {
             "driver": mail.driver,

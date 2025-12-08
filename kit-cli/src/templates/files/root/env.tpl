@@ -8,13 +8,12 @@ SERVER_PORT=8080
 
 VITE_PORT=5173
 
-# Database
-DB_DRIVER=postgres
-DB_HOST=localhost
-DB_PORT=5432
-DB_DATABASE=kit_app
-DB_USERNAME=
-DB_PASSWORD=
+# Database (SQLite by default, change to postgres://user:pass@localhost:5432/dbname for PostgreSQL)
+DATABASE_URL=sqlite://./database.db
+DB_MAX_CONNECTIONS=10
+DB_MIN_CONNECTIONS=1
+DB_CONNECT_TIMEOUT=30
+DB_LOGGING=false
 
 # Mail
 MAIL_DRIVER=smtp

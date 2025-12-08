@@ -1,5 +1,6 @@
 pub mod config;
 pub mod container;
+pub mod database;
 pub mod error;
 pub mod http;
 pub mod inertia;
@@ -11,6 +12,7 @@ pub use config::{
     env, env_optional, env_required, AppConfig, Config, Environment, ServerConfig,
 };
 pub use container::{App, Container};
+pub use database::{DatabaseConfig, DatabaseType, DbConnection, Model, ModelMut, DB};
 pub use error::FrameworkError;
 pub use http::{json, text, HttpResponse, Redirect, Request, Response, ResponseExt};
 pub use inertia::{InertiaConfig, InertiaContext, InertiaResponse};
