@@ -154,6 +154,8 @@ fn create_project(
         .map_err(|e| format!("Failed to create directories: {}", e))?;
     fs::create_dir_all(project_path.join("src/middleware"))
         .map_err(|e| format!("Failed to create directories: {}", e))?;
+    fs::create_dir_all(project_path.join("src/actions"))
+        .map_err(|e| format!("Failed to create directories: {}", e))?;
 
     // Frontend directories
     fs::create_dir_all(project_path.join("frontend/src/pages"))
@@ -247,6 +249,20 @@ fn create_project(
         templates::bootstrap(),
     )
     .map_err(|e| format!("Failed to write src/bootstrap.rs: {}", e))?;
+
+    // Write src/actions/mod.rs
+    fs::write(
+        project_path.join("src/actions/mod.rs"),
+        templates::actions_mod(),
+    )
+    .map_err(|e| format!("Failed to write src/actions/mod.rs: {}", e))?;
+
+    // Write src/actions/example_action.rs
+    fs::write(
+        project_path.join("src/actions/example_action.rs"),
+        templates::example_action(),
+    )
+    .map_err(|e| format!("Failed to write src/actions/example_action.rs: {}", e))?;
 
     // === Frontend files ===
 

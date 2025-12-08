@@ -1,3 +1,4 @@
+mod actions;
 mod bootstrap;
 mod config;
 mod controllers;

@@ -104,6 +104,16 @@ impl {struct_name} {{
     )
 }
 
+// Actions templates
+
+pub fn actions_mod() -> &'static str {
+    include_str!("files/backend/actions/mod.rs.tpl")
+}
+
+pub fn example_action() -> &'static str {
+    include_str!("files/backend/actions/example_action.rs.tpl")
+}
+
 // Config templates
 
 pub fn config_mod() -> &'static str {

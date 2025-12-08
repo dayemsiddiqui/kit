@@ -1,5 +1,6 @@
 use kit::{Config, Server};
 
+mod actions;
 mod bootstrap;
 mod config;
 mod controllers;
