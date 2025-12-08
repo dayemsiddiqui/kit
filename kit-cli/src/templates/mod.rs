@@ -64,6 +64,23 @@ impl Middleware for {struct_name} {{
     )
 }
 
+/// Template for generating new controller with make:controller command
+pub fn controller_template(name: &str) -> String {
+    format!(
+        r#"//! {name} controller
+
+use kit::{{json_response, Request, Response}};
+
+pub async fn invoke(_req: Request) -> Response {{
+    json_response!({{
+        "controller": "{name}"
+    }})
+}}
+"#,
+        name = name
+    )
+}
+
 // Config templates
 
 pub fn config_mod() -> &'static str {

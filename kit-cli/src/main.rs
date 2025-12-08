@@ -64,6 +64,12 @@ enum Commands {
         /// Name of the middleware (e.g., Auth, RateLimit)
         name: String,
     },
+    /// Generate a new controller
+    #[command(name = "make:controller")]
+    MakeController {
+        /// Name of the controller (e.g., users, user_profile)
+        name: String,
+    },
 }
 
 fn main() {
@@ -91,6 +97,9 @@ fn main() {
         }
         Commands::MakeMiddleware { name } => {
             commands::make_middleware::run(name);
+        }
+        Commands::MakeController { name } => {
+            commands::make_controller::run(name);
         }
     }
 }
