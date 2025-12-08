@@ -8,6 +8,16 @@
 // Re-export the auto-generated entity
 pub use super::entities::todos::*;
 
+use sea_orm::entity::prelude::*;
+
+// ============================================================================
+// ENTITY CONFIGURATION
+// Customize model behavior on insert/update/delete.
+// Override methods like before_save, after_save, before_delete, etc.
+// ============================================================================
+
+impl ActiveModelBehavior for ActiveModel {}
+
 // Implement Kit's Model traits for convenient querying
 impl kit::database::Model for Entity {}
 impl kit::database::ModelMut for Entity {}

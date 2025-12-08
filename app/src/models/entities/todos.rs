@@ -16,7 +16,7 @@ pub struct Model {
     pub updated_at: DateTimeUtc,
 }
 
+// Note: Relation enum is required here for DeriveEntityModel macro.
+// Define your actual relations in src/models/todos.rs using the Related trait.
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
-
-impl ActiveModelBehavior for ActiveModel {}

@@ -250,10 +250,10 @@ pub struct Model {{
 {columns}
 }}
 
+// Note: Relation enum is required here for DeriveEntityModel macro.
+// Define your actual relations in src/models/{table_name}.rs using the Related trait.
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {{}}
-
-impl ActiveModelBehavior for ActiveModel {{}}
 "#,
         table_name = table_name,
         columns = column_fields.join("\n"),
@@ -272,6 +272,16 @@ pub fn user_model_template(table_name: &str, struct_name: &str) -> String {
 
 // Re-export the auto-generated entity
 pub use super::entities::{table_name}::*;
+
+use sea_orm::entity::prelude::*;
+
+// ============================================================================
+// ENTITY CONFIGURATION
+// Customize model behavior on insert/update/delete.
+// Override methods like before_save, after_save, before_delete, etc.
+// ============================================================================
+
+impl ActiveModelBehavior for ActiveModel {{}}
 
 // Implement Kit's Model traits for convenient querying
 impl kit::database::Model for Entity {{}}
@@ -330,21 +340,29 @@ impl ActiveModel {{
 }}
 
 // ============================================================================
-// RELATIONS
-// Define relationships to other models here.
+// RELATED TRAITS
+// Implement Related<T> to enable navigation between entities.
 // ============================================================================
 
 // Example: One-to-many relation (e.g., User has many Posts)
+// First, add a variant to the Relation enum above:
+//   #[sea_orm(has_many = "super::posts::Entity")]
+//   Posts,
+// Then implement Related:
 // impl Related<super::posts::Entity> for Entity {{
 //     fn to() -> RelationDef {{
-//         super::entities::{table_name}::Relation::Posts.def()
+//         Relation::Posts.def()
 //     }}
 // }}
 
 // Example: Many-to-one relation (e.g., Post belongs to User)
+// First, add a variant to the Relation enum above:
+//   #[sea_orm(belongs_to = "super::users::Entity", from = "Column::UserId", to = "super::users::Column::Id")]
+//   User,
+// Then implement Related:
 // impl Related<super::users::Entity> for Entity {{
 //     fn to() -> RelationDef {{
-//         super::entities::{table_name}::Relation::User.def()
+//         Relation::User.def()
 //     }}
 // }}
 "#,
