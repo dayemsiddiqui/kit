@@ -32,6 +32,7 @@ pub use serde;
 
 // Re-export the proc-macros for compile-time component validation and type safety
 pub use kit_macros::inertia_response;
+pub use kit_macros::injectable;
 pub use kit_macros::InertiaProps;
 pub use kit_macros::redirect;
 pub use kit_macros::service;

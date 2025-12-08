@@ -3,10 +3,12 @@
 //! This crate provides compile-time validated macros for:
 //! - Inertia.js responses with component validation
 //! - Named route redirects with route validation
+//! - Service auto-registration
 
 use proc_macro::TokenStream;
 
 mod inertia;
+mod injectable;
 mod redirect;
 mod service;
 mod utils;
@@ -110,4 +112,29 @@ pub fn redirect(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn service(attr: TokenStream, input: TokenStream) -> TokenStream {
     service::service_impl(attr, input)
+}
+
+/// Attribute macro to auto-register a concrete type as a singleton
+///
+/// This macro automatically:
+/// 1. Derives `Default` and `Clone` for the struct
+/// 2. Registers it as a singleton in the App container at startup
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::injectable;
+///
+/// #[injectable]
+/// pub struct AppState {
+///     pub counter: u32,
+/// }
+///
+/// // Automatically registered at startup
+/// // Resolve via:
+/// let state: AppState = App::get().unwrap();
+/// ```
+#[proc_macro_attribute]
+pub fn injectable(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    injectable::injectable_impl(input)
 }
