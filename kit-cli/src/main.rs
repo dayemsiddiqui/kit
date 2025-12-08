@@ -70,6 +70,12 @@ enum Commands {
         /// Name of the controller (e.g., users, user_profile)
         name: String,
     },
+    /// Generate a new action
+    #[command(name = "make:action")]
+    MakeAction {
+        /// Name of the action (e.g., AddTodo, CreateUser)
+        name: String,
+    },
 }
 
 fn main() {
@@ -100,6 +106,9 @@ fn main() {
         }
         Commands::MakeController { name } => {
             commands::make_controller::run(name);
+        }
+        Commands::MakeAction { name } => {
+            commands::make_action::run(name);
         }
     }
 }

@@ -81,6 +81,29 @@ pub async fn invoke(_req: Request) -> Response {{
     )
 }
 
+/// Template for generating new action with make:action command
+pub fn action_template(name: &str, struct_name: &str) -> String {
+    format!(
+        r#"//! {name} action
+
+use kit::injectable;
+
+#[injectable]
+pub struct {struct_name} {{
+    // Dependencies injected via container
+}}
+
+impl {struct_name} {{
+    pub fn execute(&self) {{
+        // TODO: Implement action logic
+    }}
+}}
+"#,
+        name = name,
+        struct_name = struct_name
+    )
+}
+
 // Config templates
 
 pub fn config_mod() -> &'static str {
