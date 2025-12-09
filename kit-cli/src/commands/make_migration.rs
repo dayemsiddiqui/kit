@@ -319,17 +319,27 @@ fn update_mod_file(mod_file: &Path, migration_name: &str) -> Result<(), String> 
     lines.insert(insert_idx, mod_decl);
 
     // Update migrations() vec to include the new migration
-    // Find the vec![ line and add the new migration
     let box_new_line = format!("            Box::new({}::Migration),", migration_name);
-    let mut found_vec = false;
     let mut insert_vec_idx = None;
 
     for (i, line) in lines.iter().enumerate() {
-        if line.contains("vec![") {
-            found_vec = true;
+        // Handle empty vec![] on single line
+        if line.contains("vec![]") {
+            // Replace vec![] with vec![\n    Box::new(...)\n]
+            lines[i] = line.replace("vec![]", &format!("vec![\n{}\n        ]", box_new_line));
+            let new_content = lines.join("\n");
+            fs::write(mod_file, new_content).map_err(|e| format!("Failed to write mod.rs: {}", e))?;
+            return Ok(());
         }
-        if found_vec && line.trim() == "]" {
-            insert_vec_idx = Some(i);
+        // Handle multi-line vec![ ... ]
+        if line.contains("vec![") && !line.contains("vec![]") {
+            // Find closing ] to insert before it
+            for (j, inner_line) in lines.iter().enumerate().skip(i + 1) {
+                if inner_line.trim() == "]" || inner_line.trim().starts_with("]") {
+                    insert_vec_idx = Some(j);
+                    break;
+                }
+            }
             break;
         }
     }
