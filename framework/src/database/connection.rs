@@ -29,8 +29,37 @@ impl DbConnection {
     /// Create a new database connection from config
     ///
     /// This establishes a connection pool using the provided configuration.
+    /// For SQLite databases, this will automatically create the database file
+    /// if it doesn't exist.
     pub async fn connect(config: &DatabaseConfig) -> Result<Self, FrameworkError> {
-        let mut opt = ConnectOptions::new(&config.url);
+        // For SQLite, ensure the database file can be created
+        let url = if config.url.starts_with("sqlite://") {
+            // Extract the file path from the URL
+            let path = config.url.trim_start_matches("sqlite://");
+            let path = path.trim_start_matches("./");
+
+            // Don't apply to in-memory databases
+            if path != ":memory:" && !path.starts_with(":memory:") {
+                // Create parent directories if needed
+                if let Some(parent) = std::path::Path::new(path).parent() {
+                    if !parent.as_os_str().is_empty() {
+                        std::fs::create_dir_all(parent).ok();
+                    }
+                }
+
+                // Touch the file to create it if it doesn't exist
+                if !std::path::Path::new(path).exists() {
+                    std::fs::File::create(path).ok();
+                }
+            }
+
+            // Use the file path format that SQLite prefers with create mode
+            format!("sqlite:{}?mode=rwc", path)
+        } else {
+            config.url.clone()
+        };
+
+        let mut opt = ConnectOptions::new(&url);
         opt.max_connections(config.max_connections)
             .min_connections(config.min_connections)
             .connect_timeout(Duration::from_secs(config.connect_timeout))
