@@ -239,3 +239,14 @@ impl From<crate::error::FrameworkError> for HttpResponse {
         HttpResponse::json(body).status(status)
     }
 }
+
+/// Auto-convert AppError to HttpResponse
+///
+/// This enables using the `?` operator in controller handlers with AppError.
+impl From<crate::error::AppError> for HttpResponse {
+    fn from(err: crate::error::AppError) -> HttpResponse {
+        // Convert AppError -> FrameworkError -> HttpResponse
+        let framework_err: crate::error::FrameworkError = err.into();
+        framework_err.into()
+    }
+}
