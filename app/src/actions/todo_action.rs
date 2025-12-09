@@ -22,7 +22,7 @@ impl CreateRandomTodoAction {
             ..Default::default()
         };
 
-        todos::Entity::insert_one(new_todo).await
+    todos::Entity::insert_one(new_todo).await
     }
 }
 

@@ -42,6 +42,30 @@ pub use config::{DatabaseConfig, DatabaseConfigBuilder, DatabaseType};
 pub use connection::DbConnection;
 pub use model::{Model, ModelMut};
 
+/// Injectable database connection type
+///
+/// This is an alias for `DbConnection` that can be used with dependency injection.
+/// Use with the `#[inject]` attribute in actions and services for cleaner database access.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::{injectable, Database};
+///
+/// #[injectable]
+/// pub struct CreateUserAction {
+///     #[inject]
+///     db: Database,
+/// }
+///
+/// impl CreateUserAction {
+///     pub async fn execute(&self) {
+///         let users = User::find().all(self.db.conn()).await?;
+///     }
+/// }
+/// ```
+pub type Database = DbConnection;
+
 use crate::error::FrameworkError;
 use crate::{App, Config};
 
@@ -150,6 +174,33 @@ impl DB {
     /// ```
     pub fn is_connected() -> bool {
         App::has::<DbConnection>()
+    }
+
+    /// Get the database connection for use with SeaORM
+    ///
+    /// This is a convenience alias for `DB::connection()`. The returned
+    /// `DbConnection` implements `Deref<Target=DatabaseConnection>`, so you
+    /// can use it directly with SeaORM methods.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use kit::database::DB;
+    /// use sea_orm::{Set, ActiveModelTrait};
+    ///
+    /// let new_todo = todos::ActiveModel {
+    ///     title: Set("My Todo".to_string()),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// // Use &* to dereference to &DatabaseConnection
+    /// let inserted = new_todo.insert(&*DB::get()?).await?;
+    ///
+    /// // Or use .inner() method
+    /// let inserted = new_todo.insert(DB::get()?.inner()).await?;
+    /// ```
+    pub fn get() -> Result<DbConnection, FrameworkError> {
+        Self::connection()
     }
 }
 

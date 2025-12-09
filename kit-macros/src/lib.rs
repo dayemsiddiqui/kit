@@ -7,6 +7,7 @@
 
 use proc_macro::TokenStream;
 
+mod domain_error;
 mod inertia;
 mod injectable;
 mod redirect;
@@ -137,4 +138,36 @@ pub fn service(attr: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn injectable(_attr: TokenStream, input: TokenStream) -> TokenStream {
     injectable::injectable_impl(input)
+}
+
+/// Define a domain error with automatic HTTP response conversion
+///
+/// This macro automatically:
+/// 1. Derives `Debug` and `Clone` for the type
+/// 2. Implements `Display`, `Error`, and `HttpError` traits
+/// 3. Implements `From<T> for FrameworkError` for seamless `?` usage
+///
+/// # Attributes
+///
+/// - `status`: HTTP status code (default: 500)
+/// - `message`: Error message for Display (default: struct name converted to sentence)
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::domain_error;
+///
+/// #[domain_error(status = 404, message = "User not found")]
+/// pub struct UserNotFoundError {
+///     pub user_id: i32,
+/// }
+///
+/// // Usage in controller - just use ? operator
+/// pub async fn get_user(id: i32) -> Result<User, FrameworkError> {
+///     users.find(id).ok_or(UserNotFoundError { user_id: id })?
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn domain_error(attr: TokenStream, input: TokenStream) -> TokenStream {
+    domain_error::domain_error_impl(attr, input)
 }

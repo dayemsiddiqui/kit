@@ -3,7 +3,140 @@
 //! Provides a unified error type that can be used throughout the framework
 //! and automatically converts to appropriate HTTP responses.
 
-use std::fmt;
+use thiserror::Error;
+
+/// Trait for errors that can be converted to HTTP responses
+///
+/// Implement this trait on your domain errors to customize the HTTP status code
+/// and message that will be returned when the error is converted to a response.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::HttpError;
+///
+/// #[derive(Debug)]
+/// struct UserNotFoundError { user_id: i32 }
+///
+/// impl std::fmt::Display for UserNotFoundError {
+///     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+///         write!(f, "User {} not found", self.user_id)
+///     }
+/// }
+///
+/// impl std::error::Error for UserNotFoundError {}
+///
+/// impl HttpError for UserNotFoundError {
+///     fn status_code(&self) -> u16 { 404 }
+/// }
+/// ```
+pub trait HttpError: std::error::Error + Send + Sync + 'static {
+    /// HTTP status code (default: 500)
+    fn status_code(&self) -> u16 {
+        500
+    }
+
+    /// Error message for HTTP response (default: error's Display)
+    fn error_message(&self) -> String {
+        self.to_string()
+    }
+}
+
+/// Simple wrapper for creating one-off domain errors
+///
+/// Use this for inline/ad-hoc errors when you don't want to create
+/// a dedicated error type.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::{AppError, FrameworkError};
+///
+/// pub async fn process() -> Result<(), FrameworkError> {
+///     if invalid {
+///         return Err(AppError::bad_request("Invalid input").into());
+///     }
+///     Ok(())
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct AppError {
+    message: String,
+    status_code: u16,
+}
+
+impl AppError {
+    /// Create a new AppError with status 500 (Internal Server Error)
+    pub fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            status_code: 500,
+        }
+    }
+
+    /// Set the HTTP status code
+    pub fn status(mut self, code: u16) -> Self {
+        self.status_code = code;
+        self
+    }
+
+    /// Create a 404 Not Found error
+    pub fn not_found(message: impl Into<String>) -> Self {
+        Self::new(message).status(404)
+    }
+
+    /// Create a 400 Bad Request error
+    pub fn bad_request(message: impl Into<String>) -> Self {
+        Self::new(message).status(400)
+    }
+
+    /// Create a 401 Unauthorized error
+    pub fn unauthorized(message: impl Into<String>) -> Self {
+        Self::new(message).status(401)
+    }
+
+    /// Create a 403 Forbidden error
+    pub fn forbidden(message: impl Into<String>) -> Self {
+        Self::new(message).status(403)
+    }
+
+    /// Create a 422 Unprocessable Entity error
+    pub fn unprocessable(message: impl Into<String>) -> Self {
+        Self::new(message).status(422)
+    }
+
+    /// Create a 409 Conflict error
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::new(message).status(409)
+    }
+}
+
+impl std::fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for AppError {}
+
+impl HttpError for AppError {
+    fn status_code(&self) -> u16 {
+        self.status_code
+    }
+
+    fn error_message(&self) -> String {
+        self.message.clone()
+    }
+}
+
+impl From<AppError> for FrameworkError {
+    fn from(e: AppError) -> Self {
+        FrameworkError::Domain {
+            message: e.message,
+            status_code: e.status_code,
+        }
+    }
+}
 
 /// Framework-wide error type
 ///
@@ -21,21 +154,39 @@ use std::fmt;
 ///     // ...
 /// }
 /// ```
-#[derive(Debug, Clone)]
+///
+/// # Automatic Error Conversion
+///
+/// `FrameworkError` implements `From` for common error types, allowing seamless
+/// use of the `?` operator:
+///
+/// ```rust,ignore
+/// use kit::{DB, FrameworkError};
+/// use sea_orm::ActiveModelTrait;
+///
+/// pub async fn create_todo() -> Result<Todo, FrameworkError> {
+///     let todo = new_todo.insert(&*DB::get()?).await?;  // DbErr converts automatically!
+///     Ok(todo)
+/// }
+/// ```
+#[derive(Debug, Clone, Error)]
 pub enum FrameworkError {
     /// Service not found in the dependency injection container
+    #[error("Service '{type_name}' not registered in container")]
     ServiceNotFound {
         /// The type name of the service that was not found
         type_name: &'static str,
     },
 
     /// Parameter extraction failed (missing or invalid parameter)
+    #[error("Missing required parameter: {param_name}")]
     ParamError {
         /// The name of the parameter that failed extraction
         param_name: String,
     },
 
     /// Validation error
+    #[error("Validation error for '{field}': {message}")]
     ValidationError {
         /// The field that failed validation
         field: String,
@@ -44,15 +195,25 @@ pub enum FrameworkError {
     },
 
     /// Database error
-    DatabaseError {
+    #[error("Database error: {0}")]
+    Database(String),
+
+    /// Generic internal server error
+    #[error("Internal server error: {message}")]
+    Internal {
         /// The error message
         message: String,
     },
 
-    /// Generic internal server error
-    Internal {
+    /// Domain/application error with custom status code
+    ///
+    /// Used for user-defined domain errors that need custom HTTP status codes.
+    #[error("{message}")]
+    Domain {
         /// The error message
         message: String,
+        /// HTTP status code
+        status_code: u16,
     },
 }
 
@@ -81,9 +242,7 @@ impl FrameworkError {
 
     /// Create a DatabaseError
     pub fn database(message: impl Into<String>) -> Self {
-        Self::DatabaseError {
-            message: message.into(),
-        }
+        Self::Database(message.into())
     }
 
     /// Create an Internal error
@@ -93,38 +252,30 @@ impl FrameworkError {
         }
     }
 
+    /// Create a Domain error with custom status code
+    pub fn domain(message: impl Into<String>, status_code: u16) -> Self {
+        Self::Domain {
+            message: message.into(),
+            status_code,
+        }
+    }
+
     /// Get the HTTP status code for this error
     pub fn status_code(&self) -> u16 {
         match self {
             Self::ServiceNotFound { .. } => 500,
             Self::ParamError { .. } => 400,
             Self::ValidationError { .. } => 422,
-            Self::DatabaseError { .. } => 500,
+            Self::Database(_) => 500,
             Self::Internal { .. } => 500,
+            Self::Domain { status_code, .. } => *status_code,
         }
     }
 }
 
-impl fmt::Display for FrameworkError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ServiceNotFound { type_name } => {
-                write!(f, "Service '{}' not registered in container", type_name)
-            }
-            Self::ParamError { param_name } => {
-                write!(f, "Missing required parameter: {}", param_name)
-            }
-            Self::ValidationError { field, message } => {
-                write!(f, "Validation error for '{}': {}", field, message)
-            }
-            Self::DatabaseError { message } => {
-                write!(f, "Database error: {}", message)
-            }
-            Self::Internal { message } => {
-                write!(f, "Internal server error: {}", message)
-            }
-        }
+// Implement From<DbErr> for automatic error conversion with ?
+impl From<sea_orm::DbErr> for FrameworkError {
+    fn from(e: sea_orm::DbErr) -> Self {
+        Self::Database(e.to_string())
     }
 }
-
-impl std::error::Error for FrameworkError {}

@@ -120,6 +120,34 @@ impl {struct_name} {{
     )
 }
 
+/// Template for generating new error with make:error command
+pub fn error_template(struct_name: &str) -> String {
+    // Convert PascalCase to human readable message
+    let mut message = String::new();
+    for (i, c) in struct_name.chars().enumerate() {
+        if c.is_uppercase() && i > 0 {
+            message.push(' ');
+            message.push(c.to_lowercase().next().unwrap());
+        } else if i == 0 {
+            message.push(c);
+        } else {
+            message.push(c);
+        }
+    }
+
+    format!(
+        r#"//! {struct_name} error
+
+use kit::domain_error;
+
+#[domain_error(status = 500, message = "{message}")]
+pub struct {struct_name};
+"#,
+        struct_name = struct_name,
+        message = message
+    )
+}
+
 /// Template for models/mod.rs
 pub fn models_mod() -> &'static str {
     include_str!("files/backend/models/mod.rs.tpl")

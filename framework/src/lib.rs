@@ -12,8 +12,8 @@ pub use config::{
     env, env_optional, env_required, AppConfig, Config, Environment, ServerConfig,
 };
 pub use container::{App, Container};
-pub use database::{DatabaseConfig, DatabaseType, DbConnection, Model, ModelMut, DB};
-pub use error::FrameworkError;
+pub use database::{Database, DatabaseConfig, DatabaseType, DbConnection, Model, ModelMut, DB};
+pub use error::{AppError, FrameworkError, HttpError};
 pub use http::{json, text, HttpResponse, Redirect, Request, Response, ResponseExt};
 pub use inertia::{InertiaConfig, InertiaContext, InertiaResponse};
 pub use middleware::{
@@ -37,6 +37,7 @@ pub use serde_json;
 pub use serde;
 
 // Re-export the proc-macros for compile-time component validation and type safety
+pub use kit_macros::domain_error;
 pub use kit_macros::inertia_response;
 pub use kit_macros::injectable;
 pub use kit_macros::InertiaProps;

@@ -91,6 +91,20 @@ impl DbConnection {
         &self.inner
     }
 
+    /// Get a reference to the database connection (short alias for `inner()`)
+    ///
+    /// Use this when passing to SeaORM queries. This provides a cleaner API
+    /// than using the `Deref` implementation with `&*`.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let users = User::find().all(self.db.conn()).await?;
+    /// ```
+    pub fn conn(&self) -> &DatabaseConnection {
+        &self.inner
+    }
+
     /// Check if the connection is closed
     pub fn is_closed(&self) -> bool {
         // SeaORM doesn't expose this directly, but we can check via ping

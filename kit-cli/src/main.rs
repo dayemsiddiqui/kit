@@ -76,6 +76,12 @@ enum Commands {
         /// Name of the action (e.g., AddTodo, CreateUser)
         name: String,
     },
+    /// Generate a new domain error
+    #[command(name = "make:error")]
+    MakeError {
+        /// Name of the error (e.g., UserNotFound, InvalidInput)
+        name: String,
+    },
     /// Generate a new database migration
     #[command(name = "make:migration")]
     MakeMigration {
@@ -137,6 +143,9 @@ fn main() {
         }
         Commands::MakeAction { name } => {
             commands::make_action::run(name);
+        }
+        Commands::MakeError { name } => {
+            commands::make_error::run(name);
         }
         Commands::MakeMigration { name } => {
             commands::make_migration::run(name);
