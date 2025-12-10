@@ -137,10 +137,7 @@ fn ensure_cargo_watch() -> Result<(), String> {
     match status {
         Ok(s) if s.success() => Ok(()),
         _ => {
-            println!(
-                "{}",
-                style("cargo-watch not found. Installing...").yellow()
-            );
+            println!("{}", style("cargo-watch not found. Installing...").yellow());
             let install = Command::new("cargo")
                 .args(["install", "cargo-watch"])
                 .status()
@@ -160,10 +157,7 @@ fn ensure_npm_dependencies() -> Result<(), String> {
     let node_modules = frontend_path.join("node_modules");
 
     if !node_modules.exists() {
-        println!(
-            "{}",
-            style("Installing frontend dependencies...").yellow()
-        );
+        println!("{}", style("Installing frontend dependencies...").yellow());
         let npm_install = Command::new("npm")
             .args(["install"])
             .current_dir(frontend_path)
@@ -182,7 +176,13 @@ fn ensure_npm_dependencies() -> Result<(), String> {
     Ok(())
 }
 
-pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: bool, skip_types: bool) {
+pub fn run(
+    port: u16,
+    frontend_port: u16,
+    backend_only: bool,
+    frontend_only: bool,
+    skip_types: bool,
+) {
     // Load .env file from current directory
     let _ = dotenvy::dotenv();
 
@@ -230,7 +230,10 @@ pub fn run(port: u16, frontend_port: u16, backend_only: bool, frontend_only: boo
         println!("{}", style("Generating TypeScript types...").cyan());
         match super::generate_types::generate_types_to_file(project_path, &output_path) {
             Ok(0) => {
-                println!("{}", style("No InertiaProps structs found (skipping type generation)").dim());
+                println!(
+                    "{}",
+                    style("No InertiaProps structs found (skipping type generation)").dim()
+                );
             }
             Ok(count) => {
                 println!(
@@ -425,19 +428,11 @@ fn start_type_watcher(shutdown: Arc<AtomicBool>) {
                     match super::generate_types::generate_types_to_file(project_path, &output_path)
                     {
                         Ok(count) if count > 0 => {
-                            println!(
-                                "{} Regenerated {} type(s)",
-                                style("[types]").blue(),
-                                count
-                            );
+                            println!("{} Regenerated {} type(s)", style("[types]").blue(), count);
                         }
                         Ok(_) => {} // No types found, stay quiet
                         Err(e) => {
-                            eprintln!(
-                                "{} Failed to regenerate: {}",
-                                style("[types]").yellow(),
-                                e
-                            );
+                            eprintln!("{} Failed to regenerate: {}", style("[types]").yellow(), e);
                         }
                     }
                 }

@@ -134,8 +134,6 @@ impl Config {
 
     /// Check if debug mode is enabled
     pub fn is_debug() -> bool {
-        Config::get::<AppConfig>()
-            .map(|c| c.debug)
-            .unwrap_or(true)
+        Config::get::<AppConfig>().map(|c| c.debug).unwrap_or(true)
     }
 }

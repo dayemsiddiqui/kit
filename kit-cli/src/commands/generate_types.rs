@@ -216,7 +216,8 @@ fn topological_sort(structs: &[InertiaPropsStruct]) -> Vec<&InertiaPropsStruct> 
     }
 
     // Kahn's algorithm for topological sort
-    let mut in_degree: HashMap<String, usize> = struct_names.iter().map(|n| (n.clone(), 0)).collect();
+    let mut in_degree: HashMap<String, usize> =
+        struct_names.iter().map(|n| (n.clone(), 0)).collect();
     for s_deps in deps.values() {
         for dep in s_deps {
             if let Some(count) = in_degree.get_mut(dep) {
@@ -297,11 +298,13 @@ pub fn generate_types_to_file(project_path: &Path, output_path: &Path) -> Result
 
     // Ensure output directory exists
     if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Failed to create output directory: {}", e))?;
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
     }
 
     let typescript = generate_typescript(&structs);
-    fs::write(output_path, typescript).map_err(|e| format!("Failed to write TypeScript file: {}", e))?;
+    fs::write(output_path, typescript)
+        .map_err(|e| format!("Failed to write TypeScript file: {}", e))?;
 
     Ok(structs.len())
 }
@@ -324,17 +327,11 @@ pub fn run(output: Option<String>, watch: bool) {
         .map(|s| std::path::PathBuf::from(s))
         .unwrap_or_else(|| project_path.join("frontend/src/types/inertia-props.ts"));
 
-    println!(
-        "{}",
-        style("Scanning for InertiaProps structs...").cyan()
-    );
+    println!("{}", style("Scanning for InertiaProps structs...").cyan());
 
     match generate_types_to_file(project_path, &output_path) {
         Ok(0) => {
-            println!(
-                "{}",
-                style("No InertiaProps structs found.").yellow()
-            );
+            println!("{}", style("No InertiaProps structs found.").yellow());
         }
         Ok(count) => {
             println!(
@@ -342,11 +339,7 @@ pub fn run(output: Option<String>, watch: bool) {
                 style("->").green(),
                 count
             );
-            println!(
-                "{} Generated {}",
-                style("✓").green(),
-                output_path.display()
-            );
+            println!("{} Generated {}", style("✓").green(), output_path.display());
         }
         Err(e) => {
             eprintln!("{} {}", style("Error:").red().bold(), e);
@@ -360,7 +353,11 @@ pub fn run(output: Option<String>, watch: bool) {
     if watch {
         println!("{}", style("Watching for changes...").dim());
         if let Err(e) = start_watcher(project_path, &output_path) {
-            eprintln!("{} Failed to start watcher: {}", style("Error:").red().bold(), e);
+            eprintln!(
+                "{} Failed to start watcher: {}",
+                style("Error:").red().bold(),
+                e
+            );
             std::process::exit(1);
         }
     }
@@ -377,17 +374,10 @@ fn generate_route_types(project_path: &Path) {
 
     match super::generate_routes::generate_routes_to_file(project_path, &routes_output) {
         Ok(0) => {
-            println!(
-                "{}",
-                style("No routes found in src/routes.rs").yellow()
-            );
+            println!("{}", style("No routes found in src/routes.rs").yellow());
         }
         Ok(count) => {
-            println!(
-                "{} Found {} route(s)",
-                style("->").green(),
-                count
-            );
+            println!("{} Found {} route(s)", style("->").green(), count);
             println!(
                 "{} Generated {}",
                 style("✓").green(),
@@ -395,7 +385,11 @@ fn generate_route_types(project_path: &Path) {
             );
         }
         Err(e) => {
-            eprintln!("{} Route generation error: {}", style("Warning:").yellow(), e);
+            eprintln!(
+                "{} Route generation error: {}",
+                style("Warning:").yellow(),
+                e
+            );
         }
     }
 }
@@ -436,29 +430,19 @@ fn start_watcher(project_path: &Path, output_path: &Path) -> Result<(), String> 
         match rx.recv() {
             Ok(event) => {
                 // Check if it's a Rust file change
-                let is_rust_change = event.paths.iter().any(|p| {
-                    p.extension().map(|e| e == "rs").unwrap_or(false)
-                });
+                let is_rust_change = event
+                    .paths
+                    .iter()
+                    .any(|p| p.extension().map(|e| e == "rs").unwrap_or(false));
 
                 if is_rust_change {
-                    println!(
-                        "{}",
-                        style("Detected changes, regenerating types...").dim()
-                    );
+                    println!("{}", style("Detected changes, regenerating types...").dim());
                     match generate_types_to_file(&project_path, &output_path) {
                         Ok(count) => {
-                            println!(
-                                "{} Regenerated {} type(s)",
-                                style("✓").green(),
-                                count
-                            );
+                            println!("{} Regenerated {} type(s)", style("✓").green(), count);
                         }
                         Err(e) => {
-                            eprintln!(
-                                "{} Failed to regenerate: {}",
-                                style("Error:").red(),
-                                e
-                            );
+                            eprintln!("{} Failed to regenerate: {}", style("Error:").red(), e);
                         }
                     }
                 }

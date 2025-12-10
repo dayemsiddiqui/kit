@@ -29,10 +29,7 @@ pub fn run() {
         std::process::exit(1);
     }
 
-    println!(
-        "{} Checking migration status...",
-        style("→").cyan()
-    );
+    println!("{} Checking migration status...", style("→").cyan());
 
     // Run cargo run --bin migrate status
     let status = Command::new("cargo")

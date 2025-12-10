@@ -57,10 +57,7 @@ impl Request {
 
     /// Get a header value by name
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.inner
-            .headers()
-            .get(name)
-            .and_then(|v| v.to_str().ok())
+        self.inner.headers().get(name).and_then(|v| v.to_str().ok())
     }
 
     /// Get the Content-Type header
@@ -103,7 +100,13 @@ impl Request {
         let params = self.params;
         let bytes = collect_body(self.inner.into_body()).await?;
 
-        Ok((RequestParts { params, content_type }, bytes))
+        Ok((
+            RequestParts {
+                params,
+                content_type,
+            },
+            bytes,
+        ))
     }
 
     /// Parse the request body as JSON
@@ -176,7 +179,13 @@ impl Request {
         let params = self.params;
         let body = self.inner.into_body();
 
-        (RequestParts { params, content_type }, body)
+        (
+            RequestParts {
+                params,
+                content_type,
+            },
+            body,
+        )
     }
 }
 

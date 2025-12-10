@@ -45,10 +45,7 @@ pub fn run() {
         .expect("Failed to execute cargo command");
 
     if !status.success() {
-        eprintln!(
-            "{} Fresh migration failed",
-            style("Error:").red().bold()
-        );
+        eprintln!("{} Fresh migration failed", style("Error:").red().bold());
         std::process::exit(1);
     }
 }

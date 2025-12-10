@@ -126,7 +126,12 @@ pub fn env_required<T: std::str::FromStr>(key: &str) -> T {
     std::env::var(key)
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or_else(|| panic!("Required environment variable {} is not set or invalid", key))
+        .unwrap_or_else(|| {
+            panic!(
+                "Required environment variable {} is not set or invalid",
+                key
+            )
+        })
 }
 
 /// Get an optional environment variable

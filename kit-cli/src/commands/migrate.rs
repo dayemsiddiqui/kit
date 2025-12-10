@@ -29,10 +29,7 @@ pub fn run() {
         std::process::exit(1);
     }
 
-    println!(
-        "{} Running migrations...",
-        style("→").cyan()
-    );
+    println!("{} Running migrations...", style("→").cyan());
 
     // Run cargo run --bin migrate
     let status = Command::new("cargo")
@@ -41,10 +38,7 @@ pub fn run() {
         .expect("Failed to execute cargo command");
 
     if !status.success() {
-        eprintln!(
-            "{} Migration failed",
-            style("Error:").red().bold()
-        );
+        eprintln!("{} Migration failed", style("Error:").red().bold());
         std::process::exit(1);
     }
 }

@@ -159,11 +159,7 @@ async fn handle_request(
             let http_response = response.unwrap_or_else(|e| e);
             http_response.into_hyper()
         }
-        None => {
-            HttpResponse::text("404 Not Found")
-                .status(404)
-                .into_hyper()
-        }
+        None => HttpResponse::text("404 Not Found").status(404).into_hyper(),
     };
 
     // Clear context after request

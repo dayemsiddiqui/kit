@@ -156,10 +156,8 @@ pub fn domain_error_impl(attr: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
         }
-        _ => {
-            syn::Error::new_spanned(&input, "domain_error can only be used on structs")
-                .to_compile_error()
-        }
+        _ => syn::Error::new_spanned(&input, "domain_error can only be used on structs")
+            .to_compile_error(),
     };
 
     TokenStream::from(expanded)

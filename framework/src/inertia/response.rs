@@ -1,5 +1,5 @@
-use crate::http::HttpResponse;
 use super::config::InertiaConfig;
+use crate::http::HttpResponse;
 
 /// Builds Inertia responses based on request type
 pub struct InertiaResponse {

@@ -224,7 +224,8 @@ fn validate_component_exists(component_name: &str, span: Span) -> Result<(), syn
             }
         } else {
             error_msg.push_str("\n\nNo components found in frontend/src/pages/");
-            error_msg.push_str("\nMake sure your frontend directory structure is set up correctly.");
+            error_msg
+                .push_str("\nMake sure your frontend directory structure is set up correctly.");
         }
 
         return Err(syn::Error::new(span, error_msg));

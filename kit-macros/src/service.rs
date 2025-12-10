@@ -140,9 +140,10 @@ pub fn service_impl(attr: TokenStream, input: TokenStream) -> TokenStream {
         }
     });
 
-    let has_static = item_trait.supertraits.iter().any(|bound| {
-        matches!(bound, syn::TypeParamBound::Lifetime(lt) if lt.ident == "static")
-    });
+    let has_static = item_trait
+        .supertraits
+        .iter()
+        .any(|bound| matches!(bound, syn::TypeParamBound::Lifetime(lt) if lt.ident == "static"));
 
     // Add missing bounds
     if !has_send {

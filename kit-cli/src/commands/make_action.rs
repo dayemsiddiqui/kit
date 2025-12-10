@@ -87,11 +87,7 @@ pub fn run(name: String) {
         );
         std::process::exit(1);
     }
-    println!(
-        "{} Created {}",
-        style("✓").green(),
-        action_file.display()
-    );
+    println!("{} Created {}", style("✓").green(), action_file.display());
 
     // Update mod.rs
     if mod_file.exists() {
@@ -125,11 +121,11 @@ pub fn run(name: String) {
     );
     println!();
     println!("Usage:");
-    println!("  {} Resolve from container in your controller:", style("1.").dim());
     println!(
-        "     let action: {} = App::get().unwrap();",
-        struct_name
+        "  {} Resolve from container in your controller:",
+        style("1.").dim()
     );
+    println!("     let action: {} = App::get().unwrap();", struct_name);
     println!("     action.execute();");
     println!();
 }

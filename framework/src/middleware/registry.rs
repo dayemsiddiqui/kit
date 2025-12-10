@@ -57,9 +57,7 @@ pub struct MiddlewareRegistry {
 impl MiddlewareRegistry {
     /// Create a new empty middleware registry
     pub fn new() -> Self {
-        Self {
-            global: Vec::new(),
-        }
+        Self { global: Vec::new() }
     }
 
     /// Create a registry pre-populated with globally registered middleware

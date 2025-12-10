@@ -37,15 +37,19 @@ pub fn run(step: u32) {
 
     // Run cargo run --bin migrate rollback <step>
     let status = Command::new("cargo")
-        .args(["run", "--bin", "migrate", "--", "rollback", &step.to_string()])
+        .args([
+            "run",
+            "--bin",
+            "migrate",
+            "--",
+            "rollback",
+            &step.to_string(),
+        ])
         .status()
         .expect("Failed to execute cargo command");
 
     if !status.success() {
-        eprintln!(
-            "{} Rollback failed",
-            style("Error:").red().bold()
-        );
+        eprintln!("{} Rollback failed", style("Error:").red().bold());
         std::process::exit(1);
     }
 }

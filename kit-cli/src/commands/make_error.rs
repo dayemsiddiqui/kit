@@ -27,10 +27,7 @@ pub fn run(name: String) {
 
     // Check if we're in a Kit project (src directory should exist)
     if !Path::new("src").exists() {
-        eprintln!(
-            "{} src directory not found",
-            style("Error:").red().bold()
-        );
+        eprintln!("{} src directory not found", style("Error:").red().bold());
         eprintln!(
             "{}",
             style("Make sure you're in a Kit project root directory.").dim()
@@ -92,11 +89,7 @@ pub fn run(name: String) {
         );
         std::process::exit(1);
     }
-    println!(
-        "{} Created {}",
-        style("✓").green(),
-        error_file.display()
-    );
+    println!("{} Created {}", style("✓").green(), error_file.display());
 
     // Update or create mod.rs
     if mod_file.exists() {
@@ -131,10 +124,7 @@ pub fn run(name: String) {
     println!();
     println!("Usage:");
     println!("  {} Import in your controller:", style("1.").dim());
-    println!(
-        "     use crate::errors::{}::{};",
-        file_name, struct_name
-    );
+    println!("     use crate::errors::{}::{};", file_name, struct_name);
     println!();
     println!("  {} Return as error:", style("2.").dim());
     println!("     Err({})?", struct_name);

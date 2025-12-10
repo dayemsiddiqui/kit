@@ -58,16 +58,17 @@ async fn main() {
     match command {
         "up" | "migrate" => {
             println!("Running migrations...");
-            Migrator::up(&db, None).await.expect("Failed to run migrations");
+            Migrator::up(&db, None)
+                .await
+                .expect("Failed to run migrations");
             println!("Migrations completed successfully!");
         }
         "down" | "rollback" => {
-            let steps: u32 = args
-                .get(2)
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1);
+            let steps: u32 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
             println!("Rolling back {} migration(s)...", steps);
-            Migrator::down(&db, Some(steps)).await.expect("Failed to rollback");
+            Migrator::down(&db, Some(steps))
+                .await
+                .expect("Failed to rollback");
             println!("Rollback completed successfully!");
         }
         "status" => {
@@ -76,7 +77,9 @@ async fn main() {
         }
         "fresh" => {
             println!("WARNING: Dropping all tables and re-running migrations...");
-            Migrator::fresh(&db).await.expect("Failed to refresh database");
+            Migrator::fresh(&db)
+                .await
+                .expect("Failed to refresh database");
             println!("Database refreshed successfully!");
         }
         _ => {

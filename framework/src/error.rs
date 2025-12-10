@@ -193,9 +193,7 @@ impl ValidationErrors {
                     .message
                     .as_ref()
                     .map(|m| m.to_string())
-                    .unwrap_or_else(|| {
-                        format!("Validation failed for field '{}'", field)
-                    });
+                    .unwrap_or_else(|| format!("Validation failed for field '{}'", field));
                 result.add(field.to_string(), message);
             }
         }

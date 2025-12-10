@@ -63,9 +63,7 @@ impl HttpResponse {
             builder = builder.header(name, value);
         }
 
-        builder
-            .body(Full::new(Bytes::from(self.body)))
-            .unwrap()
+        builder.body(Full::new(Bytes::from(self.body))).unwrap()
     }
 }
 

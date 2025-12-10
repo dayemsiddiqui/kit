@@ -14,15 +14,19 @@ impl CreateRandomTodoAction {
         let random_num = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_millis() % 10000;
+            .as_millis()
+            % 10000;
 
         let new_todo = todos::ActiveModel {
             title: Set(format!("Todo #{}", random_num)),
-            description: Set(Some(format!("This is a random todo created at timestamp {}", random_num))),
+            description: Set(Some(format!(
+                "This is a random todo created at timestamp {}",
+                random_num
+            ))),
             ..Default::default()
         };
 
-    todos::Entity::insert_one(new_todo).await
+        todos::Entity::insert_one(new_todo).await
     }
 }
 

@@ -1,6 +1,6 @@
 //! Route grouping with shared prefix and middleware
 
-use super::{BoxedHandler, Router, RouteBuilder};
+use super::{BoxedHandler, RouteBuilder, Router};
 use crate::http::{Request, Response};
 use crate::middleware::{into_boxed, BoxedMiddleware, Middleware};
 use std::future::Future;

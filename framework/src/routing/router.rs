@@ -65,9 +65,8 @@ enum Method {
 }
 
 /// Type alias for route handlers
-pub type BoxedHandler = Box<
-    dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync,
->;
+pub type BoxedHandler =
+    Box<dyn Fn(Request) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync>;
 
 /// HTTP Router with Laravel-like route registration
 pub struct Router {

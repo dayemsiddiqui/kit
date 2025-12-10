@@ -114,10 +114,7 @@ async fn discover_and_generate(database_url: &str) {
         .collect();
 
     if tables.is_empty() {
-        println!(
-            "{} No tables found in database",
-            style("Info:").yellow()
-        );
+        println!("{} No tables found in database", style("Info:").yellow());
         return;
     }
 
@@ -143,7 +140,10 @@ async fn discover_and_generate(database_url: &str) {
     let entities_dir = models_dir.join("entities");
     if !entities_dir.exists() {
         fs::create_dir_all(&entities_dir).expect("Failed to create entities directory");
-        println!("{} Created src/models/entities directory", style("✓").green());
+        println!(
+            "{} Created src/models/entities directory",
+            style("✓").green()
+        );
     }
 
     // Generate entity files
@@ -387,7 +387,10 @@ fn update_models_mod(tables: &[TableInfo], models_dir: &Path) {
         let mod_decl = format!("pub mod {};", table.name);
         let alt_mod_decl = format!("mod {};", table.name);
 
-        if !lines.iter().any(|l| l.trim() == mod_decl || l.trim() == alt_mod_decl) {
+        if !lines
+            .iter()
+            .any(|l| l.trim() == mod_decl || l.trim() == alt_mod_decl)
+        {
             // Find last pub mod declaration
             let mut last_mod_idx = insert_idx;
             for (i, line) in lines.iter().enumerate() {

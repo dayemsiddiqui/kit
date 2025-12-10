@@ -88,17 +88,15 @@ pub trait FormRequest: Sized + DeserializeOwned + Validate + Send {
         let (_, bytes) = req.body_bytes().await?;
 
         let data: Self = match content_type.as_deref() {
-            Some(ct) if ct.starts_with("application/x-www-form-urlencoded") => {
-                parse_form(&bytes)?
-            }
+            Some(ct) if ct.starts_with("application/x-www-form-urlencoded") => parse_form(&bytes)?,
             _ => parse_json(&bytes)?,
         };
 
         // Validate the parsed data
         if let Err(errors) = data.validate() {
-            return Err(FrameworkError::Validation(ValidationErrors::from_validator(
-                errors,
-            )));
+            return Err(FrameworkError::Validation(
+                ValidationErrors::from_validator(errors),
+            ));
         }
 
         Ok(data)

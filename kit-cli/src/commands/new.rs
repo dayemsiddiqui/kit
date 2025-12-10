@@ -1,5 +1,5 @@
 use console::style;
-use dialoguer::{Input, theme::ColorfulTheme};
+use dialoguer::{theme::ColorfulTheme, Input};
 use std::fs;
 use std::path::Path;
 use std::process::Command;

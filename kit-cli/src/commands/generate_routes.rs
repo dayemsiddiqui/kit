@@ -59,9 +59,9 @@ pub struct PathParam {
 pub struct RouteDefinition {
     pub method: HttpMethod,
     pub path: String,
-    pub handler_module: String,  // e.g., "controllers::user"
-    pub handler_fn: String,      // e.g., "show"
-    pub name: Option<String>,    // e.g., "users.show"
+    pub handler_module: String, // e.g., "controllers::user"
+    pub handler_fn: String,     // e.g., "show"
+    pub name: Option<String>,   // e.g., "users.show"
     pub path_params: Vec<PathParam>,
 }
 
@@ -143,7 +143,11 @@ pub fn parse_routes_file(content: &str) -> Vec<RouteDefinition> {
         // Extract path parameters
         let path_params: Vec<PathParam> = param_pattern
             .captures_iter(path)
-            .filter_map(|cap| cap.get(1).map(|m| PathParam { name: m.as_str().to_string() }))
+            .filter_map(|cap| {
+                cap.get(1).map(|m| PathParam {
+                    name: m.as_str().to_string(),
+                })
+            })
             .collect();
 
         routes.push(RouteDefinition {
@@ -166,7 +170,9 @@ struct HandlerVisitor {
 
 impl HandlerVisitor {
     fn new() -> Self {
-        Self { handlers: Vec::new() }
+        Self {
+            handlers: Vec::new(),
+        }
     }
 
     fn has_handler_attr(&self, attrs: &[Attribute]) -> bool {
@@ -231,7 +237,9 @@ struct FormRequestVisitor {
 
 impl FormRequestVisitor {
     fn new() -> Self {
-        Self { structs: Vec::new() }
+        Self {
+            structs: Vec::new(),
+        }
     }
 
     fn has_form_request_attr(&self, attrs: &[Attribute]) -> bool {
@@ -374,13 +382,19 @@ fn resolve_module_to_file(project_path: &Path, module_path: &str) -> Option<std:
     }
 
     // Try as a file directly: src/controllers/user.rs
-    let file_path = project_path.join("src").join(parts.join("/")).with_extension("rs");
+    let file_path = project_path
+        .join("src")
+        .join(parts.join("/"))
+        .with_extension("rs");
     if file_path.exists() {
         return Some(file_path);
     }
 
     // Try as module folder: src/controllers/user/mod.rs
-    let mod_path = project_path.join("src").join(parts.join("/")).join("mod.rs");
+    let mod_path = project_path
+        .join("src")
+        .join(parts.join("/"))
+        .join("mod.rs");
     if mod_path.exists() {
         return Some(mod_path);
     }
@@ -396,8 +410,8 @@ pub fn scan_routes(project_path: &Path) -> Result<Vec<GeneratedRoute>, String> {
         return Err("src/routes.rs not found".to_string());
     }
 
-    let routes_content = fs::read_to_string(&routes_file)
-        .map_err(|e| format!("Failed to read routes.rs: {}", e))?;
+    let routes_content =
+        fs::read_to_string(&routes_file).map_err(|e| format!("Failed to read routes.rs: {}", e))?;
 
     let route_definitions = parse_routes_file(&routes_content);
 
@@ -409,7 +423,9 @@ pub fn scan_routes(project_path: &Path) -> Result<Vec<GeneratedRoute>, String> {
 
     for def in route_definitions {
         // Try to find the handler
-        let handler_info = if let Some(controller_file) = resolve_module_to_file(project_path, &def.handler_module) {
+        let handler_info = if let Some(controller_file) =
+            resolve_module_to_file(project_path, &def.handler_module)
+        {
             if let Ok(content) = fs::read_to_string(&controller_file) {
                 let handlers = scan_controller_handlers(&content);
                 handlers.into_iter().find(|h| h.name == def.handler_fn)
@@ -536,7 +552,9 @@ pub fn generate_typescript(routes: &[GeneratedRoute]) -> String {
                     name.split('.').last().unwrap_or(base_fn_name).to_string()
                 } else {
                     // Use path to create unique name
-                    let path_name = route.definition.path
+                    let path_name = route
+                        .definition
+                        .path
                         .trim_start_matches('/')
                         .replace(['/', '{', '}', '-'], "_");
                     if path_name.is_empty() {
@@ -564,7 +582,10 @@ pub fn generate_typescript(routes: &[GeneratedRoute]) -> String {
                 )
             } else if has_params {
                 let params_type = generate_params_interface_name(route);
-                (format!("params: {}", params_type), "RouteConfig".to_string())
+                (
+                    format!("params: {}", params_type),
+                    "RouteConfig".to_string(),
+                )
             } else if has_data {
                 let data_type = route.request_struct.as_ref().unwrap().name.clone();
                 (
@@ -613,7 +634,10 @@ pub fn generate_typescript(routes: &[GeneratedRoute]) -> String {
             let module = extract_controller_name(&route.definition.handler_module);
             let fn_name = &route.definition.handler_fn;
             let comma = if i < named_routes.len() - 1 { "," } else { "" };
-            output.push_str(&format!("  '{}': controllers.{}.{}{}\n", name, module, fn_name, comma));
+            output.push_str(&format!(
+                "  '{}': controllers.{}.{}{}\n",
+                name, module, fn_name, comma
+            ));
         }
 
         output.push_str("} as const;\n");
@@ -682,11 +706,13 @@ pub fn generate_routes_to_file(project_path: &Path, output_path: &Path) -> Resul
 
     // Ensure output directory exists
     if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Failed to create output directory: {}", e))?;
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
     }
 
     let typescript = generate_typescript(&routes);
-    fs::write(output_path, typescript).map_err(|e| format!("Failed to write TypeScript file: {}", e))?;
+    fs::write(output_path, typescript)
+        .map_err(|e| format!("Failed to write TypeScript file: {}", e))?;
 
     Ok(routes.len())
 }
@@ -717,22 +743,11 @@ pub fn run(output: Option<String>) {
 
     match generate_routes_to_file(project_path, &output_path) {
         Ok(0) => {
-            println!(
-                "{}",
-                style("No routes found in src/routes.rs").yellow()
-            );
+            println!("{}", style("No routes found in src/routes.rs").yellow());
         }
         Ok(count) => {
-            println!(
-                "{} Found {} route(s)",
-                style("->").green(),
-                count
-            );
-            println!(
-                "{} Generated {}",
-                style("✓").green(),
-                output_path.display()
-            );
+            println!("{} Found {} route(s)", style("->").green(), count);
+            println!("{} Generated {}", style("✓").green(), output_path.display());
         }
         Err(e) => {
             eprintln!("{} {}", style("Error:").red().bold(), e);

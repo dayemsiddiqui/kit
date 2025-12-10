@@ -77,7 +77,8 @@ impl Container {
     /// ```
     pub fn singleton<T: Any + Send + Sync + 'static>(&mut self, instance: T) {
         let arc: Arc<dyn Any + Send + Sync> = Arc::new(instance);
-        self.bindings.insert(TypeId::of::<T>(), Binding::Singleton(arc));
+        self.bindings
+            .insert(TypeId::of::<T>(), Binding::Singleton(arc));
     }
 
     /// Register a factory closure (new instance per resolution)

@@ -33,10 +33,7 @@ pub fn run(name: String) {
             );
             std::process::exit(1);
         }
-        println!(
-            "{} Created src/migrations directory",
-            style("✓").green()
-        );
+        println!("{} Created src/migrations directory", style("✓").green());
     }
 
     // Generate timestamp-based filename: m{YYYYMMDD}_{HHMMSS}_{name}.rs
@@ -328,7 +325,8 @@ fn update_mod_file(mod_file: &Path, migration_name: &str) -> Result<(), String> 
             // Replace vec![] with vec![\n    Box::new(...)\n]
             lines[i] = line.replace("vec![]", &format!("vec![\n{}\n        ]", box_new_line));
             let new_content = lines.join("\n");
-            fs::write(mod_file, new_content).map_err(|e| format!("Failed to write mod.rs: {}", e))?;
+            fs::write(mod_file, new_content)
+                .map_err(|e| format!("Failed to write mod.rs: {}", e))?;
             return Ok(());
         }
         // Handle multi-line vec![ ... ]

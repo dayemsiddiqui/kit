@@ -28,16 +28,19 @@ pub async fn index(_req: Request) -> Response {
     let action = App::resolve::<ExampleAction>()?;
     let message = action.execute();
 
-    inertia_response!("Home", HomeProps {
-        title: "Welcome to Kit!".to_string(),
-        message,
-        user: User {
-            name: "John Doe".to_string(),
-            email: "john@example.com".to_string(),
-        },
-        stats: Stats {
-            visits: 1234,
-            likes: 567,
-        },
-    })
+    inertia_response!(
+        "Home",
+        HomeProps {
+            title: "Welcome to Kit!".to_string(),
+            message,
+            user: User {
+                name: "John Doe".to_string(),
+                email: "john@example.com".to_string(),
+            },
+            stats: Stats {
+                visits: 1234,
+                likes: 567,
+            },
+        }
+    )
 }

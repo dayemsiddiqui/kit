@@ -11,7 +11,10 @@ use syn::{parse_macro_input, DeriveInput, Fields, FieldsNamed};
 
 /// Check if a field has the #[inject] attribute
 fn has_inject_attr(field: &syn::Field) -> bool {
-    field.attrs.iter().any(|attr| attr.path().is_ident("inject"))
+    field
+        .attrs
+        .iter()
+        .any(|attr| attr.path().is_ident("inject"))
 }
 
 /// Implements the `#[injectable]` attribute macro
@@ -84,19 +87,15 @@ pub fn injectable_impl(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-                Fields::Unnamed(_) => {
-                    syn::Error::new_spanned(
-                        &input,
-                        "injectable does not support tuple structs. Use named fields instead.",
-                    )
-                    .to_compile_error()
-                }
+                Fields::Unnamed(_) => syn::Error::new_spanned(
+                    &input,
+                    "injectable does not support tuple structs. Use named fields instead.",
+                )
+                .to_compile_error(),
             }
         }
-        _ => {
-            syn::Error::new_spanned(&input, "injectable can only be used on structs")
-                .to_compile_error()
-        }
+        _ => syn::Error::new_spanned(&input, "injectable can only be used on structs")
+            .to_compile_error(),
     };
 
     TokenStream::from(expanded)

@@ -106,27 +106,12 @@ pub fn run(name: String) {
     );
     println!();
     println!("Usage:");
-    println!(
-        "  {} Import and use in routes:",
-        style("1.").dim()
-    );
-    println!(
-        "     use crate::middleware::{};",
-        struct_name
-    );
-    println!(
-        "     .get(\"/path\", handler).middleware({})",
-        struct_name
-    );
+    println!("  {} Import and use in routes:", style("1.").dim());
+    println!("     use crate::middleware::{};", struct_name);
+    println!("     .get(\"/path\", handler).middleware({})", struct_name);
     println!();
-    println!(
-        "  {} Or apply globally in main.rs:",
-        style("2.").dim()
-    );
-    println!(
-        "     .middleware(middleware::{})",
-        struct_name
-    );
+    println!("  {} Or apply globally in main.rs:", style("2.").dim());
+    println!("     .middleware(middleware::{})", struct_name);
     println!();
 }
 
@@ -163,8 +148,8 @@ fn to_snake_case(s: &str) -> String {
 }
 
 fn update_mod_file(mod_file: &Path, file_name: &str, struct_name: &str) -> Result<(), String> {
-    let content = fs::read_to_string(mod_file)
-        .map_err(|e| format!("Failed to read mod.rs: {}", e))?;
+    let content =
+        fs::read_to_string(mod_file).map_err(|e| format!("Failed to read mod.rs: {}", e))?;
 
     // Check if module already declared
     let mod_decl = format!("mod {};", file_name);
@@ -232,8 +217,7 @@ fn update_mod_file(mod_file: &Path, file_name: &str, struct_name: &str) -> Resul
     }
 
     let new_content = lines.join("\n");
-    fs::write(mod_file, new_content)
-        .map_err(|e| format!("Failed to write mod.rs: {}", e))?;
+    fs::write(mod_file, new_content).map_err(|e| format!("Failed to write mod.rs: {}", e))?;
 
     Ok(())
 }
