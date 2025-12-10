@@ -112,10 +112,10 @@ pub fn parse_routes_file(content: &str) -> Vec<RouteDefinition> {
     let mut routes = Vec::new();
 
     // Pattern to match route definitions like:
-    // get("/path", controllers::module::function).name("route.name")
-    // post("/path/{id}", controllers::module::function)
+    // get!("/path", controllers::module::function).name("route.name")
+    // post!("/path/{id}", controllers::module::function)
     let route_pattern = Regex::new(
-        r#"(get|post|put|patch|delete)\s*\(\s*"([^"]+)"\s*,\s*([a-zA-Z_][a-zA-Z0-9_:]*)\s*\)(?:\s*\.name\s*\(\s*"([^"]+)"\s*\))?"#
+        r#"(get|post|put|patch|delete)!\s*\(\s*"([^"]+)"\s*,\s*([a-zA-Z_][a-zA-Z0-9_:]*)\s*\)(?:\s*\.name\s*\(\s*"([^"]+)"\s*\))?"#
     ).unwrap();
 
     // Pattern to extract path parameters like {id}

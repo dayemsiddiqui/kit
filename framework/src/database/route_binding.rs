@@ -179,7 +179,7 @@ where
 ///
 /// ```rust,ignore
 /// routes! {
-///     get("/users/{user}", controllers::user::show),
+///     get!("/users/{user}", controllers::user::show),
 /// }
 /// ```
 #[macro_export]

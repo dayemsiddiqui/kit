@@ -24,7 +24,10 @@ pub use middleware::{
     register_global_middleware, Middleware, MiddlewareFuture, MiddlewareRegistry, Next,
 };
 pub use routing::{
-    delete, get, post, put, route, GroupBuilder, GroupDef, GroupRoute, GroupRouter, RouteBuilder,
+    route, validate_route_path,
+    // Internal functions used by macros (hidden from docs)
+    __delete_impl, __get_impl, __post_impl, __put_impl,
+    GroupBuilder, GroupDef, GroupRoute, GroupRouter, RouteBuilder,
     RouteDefBuilder, Router,
 };
 pub use server::Server;

@@ -6,20 +6,36 @@
 //! use kit::{routes, get, post, put, delete, group};
 //!
 //! routes! {
-//!     get("/", controllers::home::index).name("home"),
-//!     get("/users", controllers::user::index).name("users.index"),
-//!     post("/users", controllers::user::store).name("users.store"),
-//!     get("/protected", controllers::home::index).middleware(AuthMiddleware),
+//!     get!("/", controllers::home::index).name("home"),
+//!     get!("/users", controllers::user::index).name("users.index"),
+//!     post!("/users", controllers::user::store).name("users.store"),
+//!     get!("/protected", controllers::home::index).middleware(AuthMiddleware),
 //!
 //!     // Route groups with prefix and middleware
 //!     group!("/api", {
-//!         get("/users", controllers::api::user::index).name("api.users.index"),
-//!         post("/users", controllers::api::user::store).name("api.users.store"),
+//!         get!("/users", controllers::api::user::index).name("api.users.index"),
+//!         post!("/users", controllers::api::user::store).name("api.users.store"),
 //!     }).middleware(AuthMiddleware),
 //! }
 //! ```
 
 use crate::http::{Request, Response};
+
+/// Const function to validate route paths start with '/'
+///
+/// This provides compile-time validation that all route paths begin with '/'.
+/// If a path doesn't start with '/', compilation will fail with a clear error.
+///
+/// # Panics
+///
+/// Panics at compile time if the path is empty or doesn't start with '/'.
+pub const fn validate_route_path(path: &'static str) -> &'static str {
+    let bytes = path.as_bytes();
+    if bytes.is_empty() || bytes[0] != b'/' {
+        panic!("Route path must start with '/'")
+    }
+    path
+}
 use crate::middleware::{into_boxed, BoxedMiddleware, Middleware};
 use crate::routing::router::{register_route_name, BoxedHandler, Router};
 use std::future::Future;
@@ -96,13 +112,27 @@ where
     }
 }
 
-/// Create a GET route definition
+/// Create a GET route definition with compile-time path validation
 ///
 /// # Example
 /// ```rust,ignore
-/// get("/users", controllers::user::index).name("users.index")
+/// get!("/users", controllers::user::index).name("users.index")
 /// ```
-pub fn get<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
+///
+/// # Compile Error
+///
+/// Fails to compile if path doesn't start with '/'.
+#[macro_export]
+macro_rules! get {
+    ($path:expr, $handler:expr) => {{
+        const _: &str = $crate::validate_route_path($path);
+        $crate::__get_impl($path, $handler)
+    }};
+}
+
+/// Internal implementation for GET routes (used by the get! macro)
+#[doc(hidden)]
+pub fn __get_impl<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
 where
     H: Fn(Request) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Response> + Send + 'static,
@@ -110,13 +140,27 @@ where
     RouteDefBuilder::new(HttpMethod::Get, path, handler)
 }
 
-/// Create a POST route definition
+/// Create a POST route definition with compile-time path validation
 ///
 /// # Example
 /// ```rust,ignore
-/// post("/users", controllers::user::store).name("users.store")
+/// post!("/users", controllers::user::store).name("users.store")
 /// ```
-pub fn post<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
+///
+/// # Compile Error
+///
+/// Fails to compile if path doesn't start with '/'.
+#[macro_export]
+macro_rules! post {
+    ($path:expr, $handler:expr) => {{
+        const _: &str = $crate::validate_route_path($path);
+        $crate::__post_impl($path, $handler)
+    }};
+}
+
+/// Internal implementation for POST routes (used by the post! macro)
+#[doc(hidden)]
+pub fn __post_impl<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
 where
     H: Fn(Request) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Response> + Send + 'static,
@@ -124,13 +168,27 @@ where
     RouteDefBuilder::new(HttpMethod::Post, path, handler)
 }
 
-/// Create a PUT route definition
+/// Create a PUT route definition with compile-time path validation
 ///
 /// # Example
 /// ```rust,ignore
-/// put("/users/{id}", controllers::user::update).name("users.update")
+/// put!("/users/{id}", controllers::user::update).name("users.update")
 /// ```
-pub fn put<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
+///
+/// # Compile Error
+///
+/// Fails to compile if path doesn't start with '/'.
+#[macro_export]
+macro_rules! put {
+    ($path:expr, $handler:expr) => {{
+        const _: &str = $crate::validate_route_path($path);
+        $crate::__put_impl($path, $handler)
+    }};
+}
+
+/// Internal implementation for PUT routes (used by the put! macro)
+#[doc(hidden)]
+pub fn __put_impl<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
 where
     H: Fn(Request) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Response> + Send + 'static,
@@ -138,13 +196,27 @@ where
     RouteDefBuilder::new(HttpMethod::Put, path, handler)
 }
 
-/// Create a DELETE route definition
+/// Create a DELETE route definition with compile-time path validation
 ///
 /// # Example
 /// ```rust,ignore
-/// delete("/users/{id}", controllers::user::destroy).name("users.destroy")
+/// delete!("/users/{id}", controllers::user::destroy).name("users.destroy")
 /// ```
-pub fn delete<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
+///
+/// # Compile Error
+///
+/// Fails to compile if path doesn't start with '/'.
+#[macro_export]
+macro_rules! delete {
+    ($path:expr, $handler:expr) => {{
+        const _: &str = $crate::validate_route_path($path);
+        $crate::__delete_impl($path, $handler)
+    }};
+}
+
+/// Internal implementation for DELETE routes (used by the delete! macro)
+#[doc(hidden)]
+pub fn __delete_impl<H, Fut>(path: &'static str, handler: H) -> RouteDefBuilder<H>
 where
     H: Fn(Request) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Response> + Send + 'static,
@@ -172,8 +244,8 @@ pub struct GroupRoute {
 /// ```rust,ignore
 /// routes! {
 ///     group!("/api", {
-///         get("/users", controllers::user::index).name("api.users"),
-///         post("/users", controllers::user::store),
+///         get!("/users", controllers::user::index).name("api.users"),
+///         post!("/users", controllers::user::store),
 ///     }).middleware(AuthMiddleware),
 /// }
 /// ```
@@ -184,8 +256,11 @@ pub struct GroupDef {
 }
 
 impl GroupDef {
-    /// Create a new route group with the given prefix
-    pub fn new(prefix: &'static str) -> Self {
+    /// Create a new route group with the given prefix (internal use)
+    ///
+    /// Use the `group!` macro instead for compile-time validation.
+    #[doc(hidden)]
+    pub fn __new_unchecked(prefix: &'static str) -> Self {
         Self {
             prefix,
             routes: Vec::new(),
@@ -211,7 +286,7 @@ impl GroupDef {
     ///
     /// ```rust,ignore
     /// group!("/api", {
-    ///     get("/users", handler),
+    ///     get!("/users", handler),
     /// }).middleware(AuthMiddleware).middleware(RateLimitMiddleware)
     /// ```
     pub fn middleware<M: Middleware + 'static>(mut self, middleware: M) -> Self {
@@ -223,10 +298,20 @@ impl GroupDef {
     ///
     /// This prepends the group prefix to each route path and applies
     /// group middleware to all routes.
+    ///
+    /// # Path Combination
+    ///
+    /// - If route path is "/" (root), the full path is just the group prefix
+    /// - Otherwise, prefix and route path are concatenated
     pub fn register(self, mut router: Router) -> Router {
         for route in self.routes {
             // Build full path with prefix
-            let full_path = format!("{}{}", self.prefix, route.path);
+            // If route path is "/" (root), just use the prefix without trailing slash
+            let full_path = if route.path == "/" {
+                self.prefix.to_string()
+            } else {
+                format!("{}{}", self.prefix, route.path)
+            };
             // We need to leak the string to get a 'static str for the router
             let full_path: &'static str = Box::leak(full_path.into_boxed_str());
 
@@ -296,19 +381,28 @@ where
 /// use kit::{routes, get, post, group};
 ///
 /// routes! {
-///     get("/", controllers::home::index),
+///     get!("/", controllers::home::index),
 ///
 ///     // All routes in this group start with /api
 ///     group!("/api", {
-///         get("/users", controllers::user::index),      // -> GET /api/users
-///         post("/users", controllers::user::store),     // -> POST /api/users
+///         get!("/users", controllers::user::index),      // -> GET /api/users
+///         post!("/users", controllers::user::store),     // -> POST /api/users
 ///     }).middleware(AuthMiddleware),
 /// }
 /// ```
+/// Define a route group with a shared prefix and compile-time validation
+///
+/// Routes within a group will have the prefix prepended to their paths.
+/// Middleware can be applied to the entire group using `.middleware()`.
+///
+/// # Compile Error
+///
+/// Fails to compile if prefix doesn't start with '/'.
 #[macro_export]
 macro_rules! group {
     ($prefix:expr, { $( $route:expr ),* $(,)? }) => {{
-        let mut group = $crate::GroupDef::new($prefix);
+        const _: &str = $crate::validate_route_path($prefix);
+        let mut group = $crate::GroupDef::__new_unchecked($prefix);
         $(
             group = group.route($route);
         )*
@@ -328,13 +422,13 @@ macro_rules! group {
 /// use crate::middleware::AuthMiddleware;
 ///
 /// routes! {
-///     get("/", controllers::home::index).name("home"),
-///     get("/users", controllers::user::index).name("users.index"),
-///     get("/users/{id}", controllers::user::show).name("users.show"),
-///     post("/users", controllers::user::store).name("users.store"),
-///     put("/users/{id}", controllers::user::update).name("users.update"),
-///     delete("/users/{id}", controllers::user::destroy).name("users.destroy"),
-///     get("/protected", controllers::home::index).middleware(AuthMiddleware),
+///     get!("/", controllers::home::index).name("home"),
+///     get!("/users", controllers::user::index).name("users.index"),
+///     get!("/users/{id}", controllers::user::show).name("users.show"),
+///     post!("/users", controllers::user::store).name("users.store"),
+///     put!("/users/{id}", controllers::user::update).name("users.update"),
+///     delete!("/users/{id}", controllers::user::destroy).name("users.destroy"),
+///     get!("/protected", controllers::home::index).middleware(AuthMiddleware),
 /// }
 /// ```
 #[macro_export]
