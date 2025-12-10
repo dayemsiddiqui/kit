@@ -242,13 +242,13 @@ fn generate_extraction(
             }
         }
         ParamKind::Model => {
-            // Route model binding using RouteBinding trait
+            // Route model binding using AutoRouteBinding trait
+            // The parameter name comes from the function signature
             quote! {
                 let #pat: #ty = {
-                    let __param_name = <#ty as kit_rs::RouteBinding>::param_name();
-                    let __value = __kit_params.get(__param_name)
-                        .ok_or_else(|| kit_rs::FrameworkError::param(__param_name))?;
-                    <#ty as kit_rs::RouteBinding>::from_route_param(__value).await?
+                    let __value = __kit_params.get(#param_name)
+                        .ok_or_else(|| kit_rs::FrameworkError::param(#param_name))?;
+                    <#ty as kit_rs::AutoRouteBinding>::from_route_param(__value).await?
                 };
             }
         }

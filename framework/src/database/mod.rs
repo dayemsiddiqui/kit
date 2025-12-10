@@ -42,7 +42,7 @@ pub mod route_binding;
 pub use config::{DatabaseConfig, DatabaseConfigBuilder, DatabaseType};
 pub use connection::DbConnection;
 pub use model::{Model, ModelMut};
-pub use route_binding::RouteBinding;
+pub use route_binding::{AutoRouteBinding, RouteBinding};
 
 /// Injectable database connection type
 ///
