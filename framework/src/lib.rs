@@ -13,8 +13,8 @@ pub use config::{
 };
 pub use container::{App, Container};
 pub use database::{Database, DatabaseConfig, DatabaseType, DbConnection, Model, ModelMut, DB};
-pub use error::{AppError, FrameworkError, HttpError};
-pub use http::{json, text, HttpResponse, Redirect, Request, Response, ResponseExt};
+pub use error::{AppError, FrameworkError, HttpError, ValidationErrors};
+pub use http::{json, text, FormRequest, FromRequest, HttpResponse, Redirect, Request, Response, ResponseExt};
 pub use inertia::{InertiaConfig, InertiaContext, InertiaResponse};
 pub use middleware::{
     register_global_middleware, Middleware, MiddlewareFuture, MiddlewareRegistry, Next,
@@ -36,13 +36,20 @@ pub use serde_json;
 // Re-export serde for InertiaProps derive macro
 pub use serde;
 
+// Re-export validator for FormRequest validation
+pub use validator;
+pub use validator::Validate;
+
 // Re-export the proc-macros for compile-time component validation and type safety
 pub use kit_macros::domain_error;
+pub use kit_macros::form_request;
+pub use kit_macros::handler;
 pub use kit_macros::inertia_response;
 pub use kit_macros::injectable;
 pub use kit_macros::InertiaProps;
 pub use kit_macros::redirect;
 pub use kit_macros::service;
+pub use kit_macros::FormRequest as FormRequestDerive;
 
 #[macro_export]
 macro_rules! json_response {

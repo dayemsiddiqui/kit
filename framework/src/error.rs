@@ -3,6 +3,7 @@
 //! Provides a unified error type that can be used throughout the framework
 //! and automatically converts to appropriate HTTP responses.
 
+use std::collections::HashMap;
 use thiserror::Error;
 
 /// Trait for errors that can be converted to HTTP responses
@@ -138,6 +139,92 @@ impl From<AppError> for FrameworkError {
     }
 }
 
+/// Validation errors with Laravel/Inertia-compatible format
+///
+/// Contains a map of field names to error messages, supporting multiple
+/// errors per field.
+///
+/// # Response Format
+///
+/// When converted to an HTTP response, produces Laravel-compatible JSON:
+///
+/// ```json
+/// {
+///     "message": "The given data was invalid.",
+///     "errors": {
+///         "email": ["The email field must be a valid email address."],
+///         "password": ["The password field must be at least 8 characters."]
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct ValidationErrors {
+    /// Map of field names to their validation error messages
+    pub errors: HashMap<String, Vec<String>>,
+}
+
+impl ValidationErrors {
+    /// Create a new empty ValidationErrors
+    pub fn new() -> Self {
+        Self {
+            errors: HashMap::new(),
+        }
+    }
+
+    /// Add an error for a specific field
+    pub fn add(&mut self, field: impl Into<String>, message: impl Into<String>) {
+        self.errors
+            .entry(field.into())
+            .or_default()
+            .push(message.into());
+    }
+
+    /// Check if there are any errors
+    pub fn is_empty(&self) -> bool {
+        self.errors.is_empty()
+    }
+
+    /// Convert from validator crate's ValidationErrors
+    pub fn from_validator(errors: validator::ValidationErrors) -> Self {
+        let mut result = Self::new();
+        for (field, field_errors) in errors.field_errors() {
+            for error in field_errors {
+                let message = error
+                    .message
+                    .as_ref()
+                    .map(|m| m.to_string())
+                    .unwrap_or_else(|| {
+                        format!("Validation failed for field '{}'", field)
+                    });
+                result.add(field.to_string(), message);
+            }
+        }
+        result
+    }
+
+    /// Convert to JSON Value for response
+    pub fn to_json(&self) -> serde_json::Value {
+        serde_json::json!({
+            "message": "The given data was invalid.",
+            "errors": self.errors
+        })
+    }
+}
+
+impl Default for ValidationErrors {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl std::fmt::Display for ValidationErrors {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Validation failed: {:?}", self.errors)
+    }
+}
+
+impl std::error::Error for ValidationErrors {}
+
 /// Framework-wide error type
 ///
 /// This enum represents all possible errors that can occur in the framework.
@@ -215,6 +302,18 @@ pub enum FrameworkError {
         /// HTTP status code
         status_code: u16,
     },
+
+    /// Form validation errors (422 Unprocessable Entity)
+    ///
+    /// Contains multiple field validation errors in Laravel/Inertia format.
+    #[error("Validation failed")]
+    Validation(ValidationErrors),
+
+    /// Authorization failed (403 Forbidden)
+    ///
+    /// Used when FormRequest::authorize() returns false.
+    #[error("This action is unauthorized.")]
+    Unauthorized,
 }
 
 impl FrameworkError {
@@ -269,7 +368,14 @@ impl FrameworkError {
             Self::Database(_) => 500,
             Self::Internal { .. } => 500,
             Self::Domain { status_code, .. } => *status_code,
+            Self::Validation(_) => 422,
+            Self::Unauthorized => 403,
         }
+    }
+
+    /// Create a Validation error from ValidationErrors struct
+    pub fn validation_errors(errors: ValidationErrors) -> Self {
+        Self::Validation(errors)
     }
 }
 

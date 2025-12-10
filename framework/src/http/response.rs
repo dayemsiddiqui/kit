@@ -230,6 +230,15 @@ impl From<crate::error::FrameworkError> for HttpResponse {
                     "message": message
                 })
             }
+            crate::error::FrameworkError::Validation(errors) => {
+                // Laravel/Inertia-compatible validation error format
+                errors.to_json()
+            }
+            crate::error::FrameworkError::Unauthorized => {
+                serde_json::json!({
+                    "message": "This action is unauthorized."
+                })
+            }
             _ => {
                 serde_json::json!({
                     "error": err.to_string()

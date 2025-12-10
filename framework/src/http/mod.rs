@@ -1,7 +1,13 @@
+mod body;
+mod extract;
+mod form_request;
 mod request;
 mod response;
 
-pub use request::Request;
+pub use body::{collect_body, parse_form, parse_json};
+pub use extract::FromRequest;
+pub use form_request::FormRequest;
+pub use request::{Request, RequestParts};
 pub use response::{HttpResponse, Redirect, RedirectRouteBuilder, Response, ResponseExt};
 
 /// Error type for missing route parameters

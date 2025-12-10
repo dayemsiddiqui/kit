@@ -6,6 +6,7 @@ pub mod make_error;
 pub mod make_inertia;
 pub mod make_middleware;
 pub mod make_migration;
+pub mod make_request;
 pub mod migrate;
 pub mod migrate_fresh;
 pub mod migrate_rollback;

@@ -1,6 +1,9 @@
 import {HomeProps} from "../types/inertia-props.ts";
+import {useForm} from "@inertiajs/react";
 
 export default function Home({ title, user, stats }: HomeProps) {
+    const { submit } = useForm();
+
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
       <h1>{title}</h1>

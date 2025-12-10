@@ -4,10 +4,14 @@
 //! - Inertia.js responses with component validation
 //! - Named route redirects with route validation
 //! - Service auto-registration
+//! - Handler attribute for controller methods
+//! - FormRequest for validated request data
 
 use proc_macro::TokenStream;
 
 mod domain_error;
+mod form_request;
+mod handler;
 mod inertia;
 mod injectable;
 mod redirect;
@@ -170,4 +174,108 @@ pub fn injectable(_attr: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn domain_error(attr: TokenStream, input: TokenStream) -> TokenStream {
     domain_error::domain_error_impl(attr, input)
+}
+
+/// Attribute macro for controller handler methods
+///
+/// Transforms handler functions to automatically extract typed parameters
+/// from HTTP requests using the `FromRequest` trait.
+///
+/// # Examples
+///
+/// ## With Request parameter:
+/// ```rust,ignore
+/// use kit::{handler, Request, Response, json_response};
+///
+/// #[handler]
+/// pub async fn index(req: Request) -> Response {
+///     json_response!({ "message": "Hello" })
+/// }
+/// ```
+///
+/// ## With FormRequest parameter:
+/// ```rust,ignore
+/// use kit::{handler, Response, json_response, form_request};
+///
+/// #[form_request]
+/// pub struct CreateUserRequest {
+///     #[validate(email)]
+///     pub email: String,
+/// }
+///
+/// #[handler]
+/// pub async fn store(form: CreateUserRequest) -> Response {
+///     // `form` is already validated - returns 422 if invalid
+///     json_response!({ "email": form.email })
+/// }
+/// ```
+///
+/// ## Without parameters:
+/// ```rust,ignore
+/// #[handler]
+/// pub async fn health_check() -> Response {
+///     json_response!({ "status": "ok" })
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn handler(attr: TokenStream, input: TokenStream) -> TokenStream {
+    handler::handler_impl(attr, input)
+}
+
+/// Derive macro for FormRequest trait
+///
+/// Generates the `FormRequest` trait implementation for a struct.
+/// The struct must also derive `serde::Deserialize` and `validator::Validate`.
+///
+/// For the cleanest DX, use the `#[form_request]` attribute macro instead,
+/// which handles all derives automatically.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::{FormRequest, Deserialize, Validate};
+///
+/// #[derive(Deserialize, Validate, FormRequest)]
+/// pub struct CreateUserRequest {
+///     #[validate(email)]
+///     pub email: String,
+///
+///     #[validate(length(min = 8))]
+///     pub password: String,
+/// }
+/// ```
+#[proc_macro_derive(FormRequest)]
+pub fn derive_form_request(input: TokenStream) -> TokenStream {
+    form_request::derive_form_request_impl(input)
+}
+
+/// Attribute macro for clean FormRequest definition
+///
+/// This is the recommended way to define FormRequest types.
+/// It automatically adds the necessary derives and generates the trait impl.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::form_request;
+///
+/// #[form_request]
+/// pub struct CreateUserRequest {
+///     #[validate(email)]
+///     pub email: String,
+///
+///     #[validate(length(min = 8))]
+///     pub password: String,
+/// }
+///
+/// // This can now be used directly in handlers:
+/// #[handler]
+/// pub async fn store(form: CreateUserRequest) -> Response {
+///     // Automatically validated - returns 422 with errors if invalid
+///     json_response!({ "email": form.email })
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn form_request(attr: TokenStream, input: TokenStream) -> TokenStream {
+    form_request::form_request_attr_impl(attr, input)
 }

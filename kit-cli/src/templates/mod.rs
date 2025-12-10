@@ -85,8 +85,9 @@ pub fn controller_template(name: &str) -> String {
     format!(
         r#"//! {name} controller
 
-use kit::{{json_response, Request, Response}};
+use kit::{{handler, json_response, Request, Response}};
 
+#[handler]
 pub async fn invoke(_req: Request) -> Response {{
     json_response!({{
         "controller": "{name}"
@@ -94,6 +95,41 @@ pub async fn invoke(_req: Request) -> Response {{
 }}
 "#,
         name = name
+    )
+}
+
+/// Template for generating new form request with make:request command
+pub fn request_template(struct_name: &str) -> String {
+    format!(
+        r#"//! {struct_name} form request
+
+use kit::form_request;
+
+#[form_request]
+pub struct {struct_name} {{
+    #[validate(length(min = 1, message = "This field is required"))]
+    pub field: String,
+
+    // Add more fields with validation:
+    // #[validate(email(message = "Invalid email address"))]
+    // pub email: String,
+    //
+    // #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
+    // pub password: String,
+    //
+    // #[validate(range(min = 1, max = 100))]
+    // pub age: i32,
+}}
+
+// Optionally override the authorize method:
+// impl {struct_name} {{
+//     fn authorize(_req: &kit::Request) -> bool {{
+//         // Return false to reject unauthorized requests (403)
+//         true
+//     }}
+// }}
+"#,
+        struct_name = struct_name
     )
 }
 

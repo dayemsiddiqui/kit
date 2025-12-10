@@ -1,4 +1,8 @@
+use super::body::{collect_body, parse_form, parse_json};
 use super::ParamError;
+use crate::error::FrameworkError;
+use bytes::Bytes;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
 /// HTTP Request wrapper providing Laravel-like access to request data
@@ -59,6 +63,11 @@ impl Request {
             .and_then(|v| v.to_str().ok())
     }
 
+    /// Get the Content-Type header
+    pub fn content_type(&self) -> Option<&str> {
+        self.header("content-type")
+    }
+
     /// Check if this is an Inertia XHR request
     pub fn is_inertia(&self) -> bool {
         self.header("X-Inertia")
@@ -81,4 +90,101 @@ impl Request {
         self.header("X-Inertia-Partial-Data")
             .map(|v| v.split(',').collect())
     }
+
+    /// Consume the request and collect the body as bytes
+    pub async fn body_bytes(self) -> Result<(RequestParts, Bytes), FrameworkError> {
+        let content_type = self
+            .inner
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string());
+
+        let params = self.params;
+        let bytes = collect_body(self.inner.into_body()).await?;
+
+        Ok((RequestParts { params, content_type }, bytes))
+    }
+
+    /// Parse the request body as JSON
+    ///
+    /// Consumes the request since the body can only be read once.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// #[derive(Deserialize)]
+    /// struct CreateUser { name: String, email: String }
+    ///
+    /// pub async fn store(req: Request) -> Response {
+    ///     let data: CreateUser = req.json().await?;
+    ///     // ...
+    /// }
+    /// ```
+    pub async fn json<T: DeserializeOwned>(self) -> Result<T, FrameworkError> {
+        let (_, bytes) = self.body_bytes().await?;
+        parse_json(&bytes)
+    }
+
+    /// Parse the request body as form-urlencoded
+    ///
+    /// Consumes the request since the body can only be read once.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// #[derive(Deserialize)]
+    /// struct LoginForm { username: String, password: String }
+    ///
+    /// pub async fn login(req: Request) -> Response {
+    ///     let form: LoginForm = req.form().await?;
+    ///     // ...
+    /// }
+    /// ```
+    pub async fn form<T: DeserializeOwned>(self) -> Result<T, FrameworkError> {
+        let (_, bytes) = self.body_bytes().await?;
+        parse_form(&bytes)
+    }
+
+    /// Parse the request body based on Content-Type header
+    ///
+    /// - `application/json` -> JSON parsing
+    /// - `application/x-www-form-urlencoded` -> Form parsing
+    /// - Otherwise -> JSON parsing (default)
+    ///
+    /// Consumes the request since the body can only be read once.
+    pub async fn input<T: DeserializeOwned>(self) -> Result<T, FrameworkError> {
+        let (parts, bytes) = self.body_bytes().await?;
+
+        match parts.content_type.as_deref() {
+            Some(ct) if ct.starts_with("application/x-www-form-urlencoded") => parse_form(&bytes),
+            _ => parse_json(&bytes),
+        }
+    }
+
+    /// Consume the request and return its parts along with the inner hyper request body
+    ///
+    /// This is used internally by the handler macro for FormRequest extraction.
+    pub fn into_parts(self) -> (RequestParts, hyper::body::Incoming) {
+        let content_type = self
+            .inner
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string());
+
+        let params = self.params;
+        let body = self.inner.into_body();
+
+        (RequestParts { params, content_type }, body)
+    }
+}
+
+/// Request parts after body has been separated
+///
+/// Contains metadata needed for body parsing without the body itself.
+#[derive(Clone)]
+pub struct RequestParts {
+    pub params: HashMap<String, String>,
+    pub content_type: Option<String>,
 }
