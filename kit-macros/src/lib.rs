@@ -10,11 +10,11 @@
 use proc_macro::TokenStream;
 
 mod domain_error;
-mod form_request;
 mod handler;
 mod inertia;
 mod injectable;
 mod redirect;
+mod request;
 mod service;
 mod utils;
 
@@ -227,7 +227,7 @@ pub fn handler(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// Generates the `FormRequest` trait implementation for a struct.
 /// The struct must also derive `serde::Deserialize` and `validator::Validate`.
 ///
-/// For the cleanest DX, use the `#[form_request]` attribute macro instead,
+/// For the cleanest DX, use the `#[request]` attribute macro instead,
 /// which handles all derives automatically.
 ///
 /// # Example
@@ -246,20 +246,24 @@ pub fn handler(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(FormRequest)]
 pub fn derive_form_request(input: TokenStream) -> TokenStream {
-    form_request::derive_form_request_impl(input)
+    request::derive_request_impl(input)
 }
 
-/// Attribute macro for clean FormRequest definition
+/// Attribute macro for clean request data definition
 ///
-/// This is the recommended way to define FormRequest types.
+/// This is the recommended way to define validated request types.
 /// It automatically adds the necessary derives and generates the trait impl.
+///
+/// Works with both:
+/// - `application/json` - JSON request bodies
+/// - `application/x-www-form-urlencoded` - HTML form submissions
 ///
 /// # Example
 ///
 /// ```rust,ignore
-/// use kit::form_request;
+/// use kit::request;
 ///
-/// #[form_request]
+/// #[request]
 /// pub struct CreateUserRequest {
 ///     #[validate(email)]
 ///     pub email: String,
@@ -276,6 +280,6 @@ pub fn derive_form_request(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn form_request(attr: TokenStream, input: TokenStream) -> TokenStream {
-    form_request::form_request_attr_impl(attr, input)
+pub fn request(attr: TokenStream, input: TokenStream) -> TokenStream {
+    request::request_attr_impl(attr, input)
 }

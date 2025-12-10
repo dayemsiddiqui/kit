@@ -42,12 +42,12 @@ pub use validator::Validate;
 
 // Re-export the proc-macros for compile-time component validation and type safety
 pub use kit_macros::domain_error;
-pub use kit_macros::form_request;
 pub use kit_macros::handler;
 pub use kit_macros::inertia_response;
 pub use kit_macros::injectable;
 pub use kit_macros::InertiaProps;
 pub use kit_macros::redirect;
+pub use kit_macros::request;
 pub use kit_macros::service;
 pub use kit_macros::FormRequest as FormRequestDerive;
 

@@ -1,6 +1,7 @@
-//! FormRequest derive macro implementation
+//! Request derive macro implementation
 //!
 //! Generates the FormRequest trait implementation and adds necessary derives.
+//! Works for both JSON and form-urlencoded request bodies.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -32,7 +33,7 @@ use syn::{parse_macro_input, DeriveInput};
 ///     pub email: String,
 /// }
 /// ```
-pub fn derive_form_request_impl(input: TokenStream) -> TokenStream {
+pub fn derive_request_impl(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let generics = &input.generics;
@@ -45,15 +46,15 @@ pub fn derive_form_request_impl(input: TokenStream) -> TokenStream {
     output.into()
 }
 
-/// Implementation of the `#[form_request]` attribute macro
+/// Implementation of the `#[request]` attribute macro
 ///
 /// This attribute macro provides the cleanest DX by automatically adding
-/// the necessary derives. Just use `#[form_request]` and you're done:
+/// the necessary derives. Just use `#[request]` and you're done:
 ///
 /// ```rust,ignore
-/// use kit::form_request;
+/// use kit::request;
 ///
-/// #[form_request]
+/// #[request]
 /// pub struct CreateUserRequest {
 ///     #[validate(email)]
 ///     pub email: String,
@@ -77,7 +78,15 @@ pub fn derive_form_request_impl(input: TokenStream) -> TokenStream {
 ///
 /// impl kit_rs::FormRequest for CreateUserRequest {}
 /// ```
-pub fn form_request_attr_impl(_attr: TokenStream, input: TokenStream) -> TokenStream {
+///
+/// ## Content Type Support
+///
+/// The `#[request]` attribute works with both:
+/// - `application/json` - JSON request bodies
+/// - `application/x-www-form-urlencoded` - HTML form submissions
+///
+/// The content type is automatically detected from the request headers.
+pub fn request_attr_impl(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let vis = &input.vis;
@@ -89,7 +98,7 @@ pub fn form_request_attr_impl(_attr: TokenStream, input: TokenStream) -> TokenSt
     let data = match &input.data {
         syn::Data::Struct(data) => data,
         _ => {
-            return syn::Error::new_spanned(&input, "#[form_request] can only be used on structs")
+            return syn::Error::new_spanned(&input, "#[request] can only be used on structs")
                 .to_compile_error()
                 .into();
         }
