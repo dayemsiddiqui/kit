@@ -261,6 +261,93 @@ where
 }
 
 // ============================================================================
+// Fallback Route Support
+// ============================================================================
+
+/// Builder for fallback route definitions that supports `.middleware()` chaining
+///
+/// The fallback route is invoked when no other routes match, allowing custom
+/// handling of 404 scenarios.
+pub struct FallbackDefBuilder<H> {
+    handler: H,
+    middlewares: Vec<BoxedMiddleware>,
+}
+
+impl<H, Fut> FallbackDefBuilder<H>
+where
+    H: Fn(Request) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Response> + Send + 'static,
+{
+    /// Create a new fallback definition builder
+    pub fn new(handler: H) -> Self {
+        Self {
+            handler,
+            middlewares: Vec::new(),
+        }
+    }
+
+    /// Add middleware to this fallback route
+    pub fn middleware<M: Middleware + 'static>(mut self, middleware: M) -> Self {
+        self.middlewares.push(into_boxed(middleware));
+        self
+    }
+
+    /// Register this fallback definition with a router
+    pub fn register(self, mut router: Router) -> Router {
+        let handler = self.handler;
+        let boxed: BoxedHandler = Box::new(move |req| Box::pin(handler(req)));
+        router.set_fallback(Arc::new(boxed));
+
+        // Apply middleware
+        for mw in self.middlewares {
+            router.add_fallback_middleware(mw);
+        }
+
+        router
+    }
+}
+
+/// Create a fallback route definition
+///
+/// The fallback handler is called when no other routes match the request,
+/// allowing you to override the default 404 behavior.
+///
+/// # Example
+/// ```rust,ignore
+/// routes! {
+///     get!("/", controllers::home::index),
+///     get!("/users", controllers::user::index),
+///
+///     // Custom 404 handler
+///     fallback!(controllers::fallback::invoke),
+/// }
+/// ```
+///
+/// With middleware:
+/// ```rust,ignore
+/// routes! {
+///     get!("/", controllers::home::index),
+///     fallback!(controllers::fallback::invoke).middleware(LoggingMiddleware),
+/// }
+/// ```
+#[macro_export]
+macro_rules! fallback {
+    ($handler:expr) => {{
+        $crate::__fallback_impl($handler)
+    }};
+}
+
+/// Internal implementation for fallback routes (used by the fallback! macro)
+#[doc(hidden)]
+pub fn __fallback_impl<H, Fut>(handler: H) -> FallbackDefBuilder<H>
+where
+    H: Fn(Request) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Response> + Send + 'static,
+{
+    FallbackDefBuilder::new(handler)
+}
+
+// ============================================================================
 // Route Grouping Support
 // ============================================================================
 

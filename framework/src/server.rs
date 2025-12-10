@@ -159,7 +159,31 @@ async fn handle_request(
             let http_response = response.unwrap_or_else(|e| e);
             http_response.into_hyper()
         }
-        None => HttpResponse::text("404 Not Found").status(404).into_hyper(),
+        None => {
+            // Check for fallback handler
+            if let Some((fallback_handler, fallback_middleware)) = router.get_fallback() {
+                let request = Request::new(req).with_params(std::collections::HashMap::new());
+
+                // Build middleware chain for fallback
+                let mut chain = MiddlewareChain::new();
+
+                // 1. Add global middleware
+                chain.extend(middleware_registry.global_middleware().iter().cloned());
+
+                // 2. Add fallback-specific middleware
+                chain.extend(fallback_middleware);
+
+                // 3. Execute chain with fallback handler
+                let response = chain.execute(request, fallback_handler).await;
+
+                // Unwrap the Result - both Ok and Err contain HttpResponse
+                let http_response = response.unwrap_or_else(|e| e);
+                http_response.into_hyper()
+            } else {
+                // No fallback defined, return default 404
+                HttpResponse::text("404 Not Found").status(404).into_hyper()
+            }
+        }
     };
 
     // Clear context after request

@@ -76,6 +76,10 @@ pub struct Router {
     delete_routes: MatchitRouter<Arc<BoxedHandler>>,
     /// Middleware assignments: path -> boxed middleware instances
     route_middleware: HashMap<String, Vec<BoxedMiddleware>>,
+    /// Fallback handler for when no routes match (overrides default 404)
+    fallback_handler: Option<Arc<BoxedHandler>>,
+    /// Middleware for the fallback route
+    fallback_middleware: Vec<BoxedMiddleware>,
 }
 
 impl Router {
@@ -86,6 +90,8 @@ impl Router {
             put_routes: MatchitRouter::new(),
             delete_routes: MatchitRouter::new(),
             route_middleware: HashMap::new(),
+            fallback_handler: None,
+            fallback_middleware: Vec::new(),
         }
     }
 
@@ -100,6 +106,23 @@ impl Router {
             .entry(path.to_string())
             .or_default()
             .push(middleware);
+    }
+
+    /// Set the fallback handler for when no routes match
+    pub(crate) fn set_fallback(&mut self, handler: Arc<BoxedHandler>) {
+        self.fallback_handler = Some(handler);
+    }
+
+    /// Add middleware to the fallback route
+    pub(crate) fn add_fallback_middleware(&mut self, middleware: BoxedMiddleware) {
+        self.fallback_middleware.push(middleware);
+    }
+
+    /// Get the fallback handler and its middleware
+    pub fn get_fallback(&self) -> Option<(Arc<BoxedHandler>, Vec<BoxedMiddleware>)> {
+        self.fallback_handler
+            .as_ref()
+            .map(|h| (h.clone(), self.fallback_middleware.clone()))
     }
 
     /// Insert a GET route with a pre-boxed handler (internal use for groups)

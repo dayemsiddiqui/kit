@@ -26,8 +26,8 @@ pub use middleware::{
 pub use routing::{
     route, validate_route_path,
     // Internal functions used by macros (hidden from docs)
-    __delete_impl, __get_impl, __post_impl, __put_impl,
-    GroupBuilder, GroupDef, GroupRoute, GroupRouter, RouteBuilder,
+    __delete_impl, __fallback_impl, __get_impl, __post_impl, __put_impl,
+    FallbackDefBuilder, GroupBuilder, GroupDef, GroupRoute, GroupRouter, RouteBuilder,
     RouteDefBuilder, Router,
 };
 pub use server::Server;
