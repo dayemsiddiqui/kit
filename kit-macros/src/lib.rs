@@ -196,9 +196,9 @@ pub fn domain_error(attr: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// ## With FormRequest parameter:
 /// ```rust,ignore
-/// use kit::{handler, Response, json_response, form_request};
+/// use kit::{handler, Response, json_response, request};
 ///
-/// #[form_request]
+/// #[request]
 /// pub struct CreateUserRequest {
 ///     #[validate(email)]
 ///     pub email: String,
