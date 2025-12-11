@@ -6,9 +6,11 @@
 //! - Service auto-registration
 //! - Handler attribute for controller methods
 //! - FormRequest for validated request data
+//! - Jest-like testing with describe! and test! macros
 
 use proc_macro::TokenStream;
 
+mod describe;
 mod domain_error;
 mod handler;
 mod inertia;
@@ -17,6 +19,7 @@ mod kit_test;
 mod redirect;
 mod request;
 mod service;
+mod test_macro;
 mod utils;
 
 /// Derive macro for generating `Serialize` implementation for Inertia props
@@ -331,4 +334,80 @@ pub fn request(attr: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn kit_test(attr: TokenStream, input: TokenStream) -> TokenStream {
     kit_test::kit_test_impl(attr, input)
+}
+
+/// Group related tests with a descriptive name
+///
+/// Creates a module containing related tests, similar to Jest's describe blocks.
+/// Supports nesting for hierarchical test organization.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::{describe, test, expect};
+/// use kit::testing::TestDatabase;
+///
+/// describe!("ListTodosAction", {
+///     test!("returns empty list when no todos exist", async fn(db: TestDatabase) {
+///         let action = ListTodosAction::new();
+///         let todos = action.execute().await.unwrap();
+///         expect!(todos).to_be_empty();
+///     });
+///
+///     // Nested describe for grouping related tests
+///     describe!("with pagination", {
+///         test!("returns first page", async fn(db: TestDatabase) {
+///             // ...
+///         });
+///     });
+/// });
+/// ```
+#[proc_macro]
+pub fn describe(input: TokenStream) -> TokenStream {
+    describe::describe_impl(input)
+}
+
+/// Define an individual test case with a descriptive name
+///
+/// Creates a test function with optional TestDatabase parameter.
+/// The test name is displayed in failure output for easy identification.
+///
+/// # Examples
+///
+/// ## Async test with database
+/// ```rust,ignore
+/// test!("creates a user", async fn(db: TestDatabase) {
+///     let user = CreateUserAction::new().execute("test@example.com").await.unwrap();
+///     expect!(user.email).to_equal("test@example.com".to_string());
+/// });
+/// ```
+///
+/// ## Async test without database
+/// ```rust,ignore
+/// test!("calculates sum", async fn() {
+///     let result = calculate_sum(1, 2).await;
+///     expect!(result).to_equal(3);
+/// });
+/// ```
+///
+/// ## Sync test
+/// ```rust,ignore
+/// test!("adds numbers", fn() {
+///     expect!(1 + 1).to_equal(2);
+/// });
+/// ```
+///
+/// On failure, the test name is shown:
+/// ```text
+/// Test: "creates a user"
+///   at src/actions/user_action.rs:25
+///
+///   expect!(actual).to_equal(expected)
+///
+///   Expected: "test@example.com"
+///   Received: "wrong@email.com"
+/// ```
+#[proc_macro]
+pub fn test(input: TokenStream) -> TokenStream {
+    test_macro::test_impl(input)
 }

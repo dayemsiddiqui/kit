@@ -29,3 +29,4 @@ sea-orm-migration = "1.0"
 thiserror = "1.0"
 validator = { version = "0.18", features = ["derive"] }
 serde_urlencoded = "0.7"
+pretty_assertions = "1.4"

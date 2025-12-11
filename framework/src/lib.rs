@@ -7,6 +7,7 @@ pub mod inertia;
 pub mod middleware;
 pub mod routing;
 pub mod server;
+pub mod testing;
 
 pub use config::{env, env_optional, env_required, AppConfig, Config, Environment, ServerConfig};
 pub use container::{App, Container};
@@ -62,6 +63,10 @@ pub use kit_macros::FormRequest as FormRequestDerive;
 pub use kit_macros::InertiaProps;
 pub use kit_macros::kit_test;
 
+// Re-export Jest-like testing macros
+pub use kit_macros::describe;
+pub use kit_macros::test;
+
 #[macro_export]
 macro_rules! json_response {
     ($($json:tt)+) => {
@@ -100,12 +105,31 @@ macro_rules! global_middleware {
     };
 }
 
-/// Testing utilities for the application container and database
+/// Create an expectation for fluent assertions
 ///
-/// Provides `TestContainer` for setting up isolated test environments with
-/// fake implementations, and `TestDatabase` for database testing with
-/// in-memory SQLite.
-pub mod testing {
-    pub use crate::container::testing::{TestContainer, TestContainerGuard};
-    pub use crate::database::testing::TestDatabase;
+/// # Example
+///
+/// ```rust,ignore
+/// use kit::expect;
+///
+/// expect!(actual).to_equal(expected);
+/// expect!(result).to_be_ok();
+/// expect!(vec).to_have_length(3);
+/// ```
+///
+/// On failure, shows clear output:
+/// ```text
+/// Test: "returns all todos"
+///   at src/actions/todo_action.rs:25
+///
+///   expect!(actual).to_equal(expected)
+///
+///   Expected: 0
+///   Received: 3
+/// ```
+#[macro_export]
+macro_rules! expect {
+    ($value:expr) => {
+        $crate::testing::Expect::new($value, concat!(file!(), ":", line!()))
+    };
 }
