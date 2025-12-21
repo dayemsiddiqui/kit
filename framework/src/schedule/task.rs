@@ -1,6 +1,6 @@
 //! Scheduled task trait and entry types
 //!
-//! This module defines the `ScheduledTask` trait for creating struct-based
+//! This module defines the `Task` trait for creating struct-based
 //! scheduled tasks, as well as internal types for task management.
 
 use super::expression::CronExpression;
@@ -21,7 +21,7 @@ pub type BoxedFuture<'a> = Pin<Box<dyn Future<Output = TaskResult> + Send + 'a>>
 
 /// Internal trait for task execution
 ///
-/// This trait is implemented automatically for `ScheduledTask` and closure-based tasks.
+/// This trait is implemented automatically for `Task` and closure-based tasks.
 #[async_trait]
 pub trait TaskHandler: Send + Sync {
     /// Execute the task
@@ -31,12 +31,12 @@ pub trait TaskHandler: Send + Sync {
 /// Trait for defining scheduled tasks
 ///
 /// Implement this trait on a struct to create a reusable scheduled task.
-/// The task will be automatically registered when added to the schedule.
+/// Schedule configuration is done via the fluent builder API when registering.
 ///
 /// # Example
 ///
 /// ```rust,ignore
-/// use kit::{ScheduledTask, CronExpression, FrameworkError};
+/// use kit::{Task, TaskResult};
 /// use async_trait::async_trait;
 ///
 /// pub struct CleanupLogsTask;
@@ -48,60 +48,33 @@ pub trait TaskHandler: Send + Sync {
 /// }
 ///
 /// #[async_trait]
-/// impl ScheduledTask for CleanupLogsTask {
-///     fn name(&self) -> &str {
-///         "cleanup:logs"
-///     }
-///
-///     fn schedule(&self) -> CronExpression {
-///         CronExpression::daily_at("03:00")
-///     }
-///
-///     async fn handle(&self) -> Result<(), FrameworkError> {
+/// impl Task for CleanupLogsTask {
+///     async fn handle(&self) -> TaskResult {
 ///         // Cleanup logic here
 ///         println!("Cleaning up old log files...");
 ///         Ok(())
 ///     }
 /// }
+///
+/// // Register in schedule.rs with fluent API:
+/// // schedule.add(
+/// //     schedule.task(CleanupLogsTask::new())
+/// //         .daily()
+/// //         .at("03:00")
+/// //         .name("cleanup:logs")
+/// // );
 /// ```
 #[async_trait]
-pub trait ScheduledTask: Send + Sync {
-    /// Unique name for the task (used in logs and schedule:list)
-    fn name(&self) -> &str;
-
-    /// The cron expression for when this task should run
-    fn schedule(&self) -> CronExpression;
-
+pub trait Task: Send + Sync {
     /// Execute the task
     async fn handle(&self) -> TaskResult;
-
-    /// Optional description for the task (shown in schedule:list)
-    fn description(&self) -> Option<&str> {
-        None
-    }
-
-    /// Whether to prevent overlapping runs of this task
-    ///
-    /// When enabled, the scheduler will skip running this task if
-    /// a previous run is still in progress.
-    fn without_overlapping(&self) -> bool {
-        false
-    }
-
-    /// Whether to run the task in background (non-blocking)
-    ///
-    /// When enabled, the scheduler won't wait for the task to complete
-    /// before continuing to the next task.
-    fn run_in_background(&self) -> bool {
-        false
-    }
 }
 
-// Implement TaskHandler for any type implementing ScheduledTask
+// Implement TaskHandler for any type implementing Task
 #[async_trait]
-impl<T: ScheduledTask> TaskHandler for T {
+impl<T: Task> TaskHandler for T {
     async fn handle(&self) -> TaskResult {
-        ScheduledTask::handle(self).await
+        Task::handle(self).await
     }
 }
 
@@ -166,33 +139,17 @@ mod tests {
     struct TestTask;
 
     #[async_trait]
-    impl ScheduledTask for TestTask {
-        fn name(&self) -> &str {
-            "test-task"
-        }
-
-        fn schedule(&self) -> CronExpression {
-            CronExpression::every_minute()
-        }
-
+    impl Task for TestTask {
         async fn handle(&self) -> TaskResult {
             Ok(())
-        }
-
-        fn description(&self) -> Option<&str> {
-            Some("A test task")
         }
     }
 
     #[tokio::test]
-    async fn test_scheduled_task_trait() {
+    async fn test_task_trait() {
         let task = TestTask;
-        assert_eq!(task.name(), "test-task");
-        assert_eq!(task.description(), Some("A test task"));
-        assert!(!task.without_overlapping());
-        assert!(!task.run_in_background());
 
-        let result: TaskResult = ScheduledTask::handle(&task).await;
+        let result: TaskResult = Task::handle(&task).await;
         assert!(result.is_ok());
     }
 
@@ -200,8 +157,8 @@ mod tests {
     async fn test_task_entry() {
         let task = TestTask;
         let entry = TaskEntry {
-            name: task.name().to_string(),
-            expression: task.schedule(),
+            name: "test-task".to_string(),
+            expression: CronExpression::every_minute(),
             task: Arc::new(task),
             description: Some("A test task".to_string()),
             without_overlapping: false,

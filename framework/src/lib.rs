@@ -34,7 +34,7 @@ pub use routing::{
     FallbackDefBuilder, GroupBuilder, GroupDef, GroupItem, GroupRoute, GroupRouter,
     IntoGroupItem, RouteBuilder, RouteDefBuilder, Router,
 };
-pub use schedule::{CronExpression, DayOfWeek, Schedule, ScheduledTask, TaskBuilder, TaskEntry};
+pub use schedule::{CronExpression, DayOfWeek, Schedule, Task, TaskBuilder, TaskEntry, TaskResult};
 pub use server::Server;
 
 // Re-export async_trait for middleware implementations

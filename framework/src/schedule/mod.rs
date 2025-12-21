@@ -1,7 +1,7 @@
 //! Task Scheduler module for Kit framework
 //!
 //! Provides a Laravel-like task scheduling system with support for:
-//! - Trait-based tasks (implement `ScheduledTask`)
+//! - Trait-based tasks (implement `Task`)
 //! - Closure-based tasks (inline definitions)
 //! - Fluent scheduling API (`.daily()`, `.hourly()`, etc.)
 //!
@@ -10,28 +10,27 @@
 //! ## Using Trait-Based Tasks
 //!
 //! ```rust,ignore
-//! use kit::{ScheduledTask, CronExpression, FrameworkError};
+//! use kit::{Task, TaskResult};
 //! use async_trait::async_trait;
 //!
 //! pub struct CleanupLogsTask;
 //!
 //! #[async_trait]
-//! impl ScheduledTask for CleanupLogsTask {
-//!     fn name(&self) -> &str { "cleanup:logs" }
-//!
-//!     fn schedule(&self) -> CronExpression {
-//!         CronExpression::daily_at("03:00")
-//!     }
-//!
-//!     async fn handle(&self) -> Result<(), FrameworkError> {
+//! impl Task for CleanupLogsTask {
+//!     async fn handle(&self) -> TaskResult {
 //!         // Your task logic here
 //!         Ok(())
 //!     }
 //! }
 //!
-//! // Register in schedule.rs
+//! // Register in schedule.rs with fluent API
 //! pub fn register(schedule: &mut Schedule) {
-//!     schedule.task(CleanupLogsTask);
+//!     schedule.add(
+//!         schedule.task(CleanupLogsTask)
+//!             .daily()
+//!             .at("03:00")
+//!             .name("cleanup:logs")
+//!     );
 //! }
 //! ```
 //!
@@ -42,20 +41,24 @@
 //!
 //! pub fn register(schedule: &mut Schedule) {
 //!     // Simple closure task
-//!     schedule.call(|| async {
-//!         println!("Running every minute!");
-//!         Ok(())
-//!     }).every_minute();
+//!     schedule.add(
+//!         schedule.call(|| async {
+//!             println!("Running every minute!");
+//!             Ok(())
+//!         }).every_minute().name("minute-task")
+//!     );
 //!
 //!     // Configured closure task
-//!     schedule.call(|| async {
-//!         println!("Daily cleanup!");
-//!         Ok(())
-//!     })
-//!     .daily()
-//!     .at("03:00")
-//!     .name("daily-cleanup")
-//!     .description("Cleans up temporary files");
+//!     schedule.add(
+//!         schedule.call(|| async {
+//!             println!("Daily cleanup!");
+//!             Ok(())
+//!         })
+//!         .daily()
+//!         .at("03:00")
+//!         .name("daily-cleanup")
+//!         .description("Cleans up temporary files")
+//!     );
 //! }
 //! ```
 //!
@@ -80,10 +83,9 @@ pub mod task;
 
 pub use builder::TaskBuilder;
 pub use expression::{CronExpression, DayOfWeek};
-pub use task::{BoxedFuture, BoxedTask, ScheduledTask, TaskEntry, TaskHandler, TaskResult};
+pub use task::{BoxedFuture, BoxedTask, Task, TaskEntry, TaskHandler, TaskResult};
 
 use crate::error::FrameworkError;
-use std::sync::Arc;
 
 /// Schedule - main entry point for scheduling tasks
 ///
@@ -96,14 +98,21 @@ use std::sync::Arc;
 /// use kit::Schedule;
 ///
 /// pub fn register(schedule: &mut Schedule) {
-///     // Register a struct implementing ScheduledTask
-///     schedule.task(MyCleanupTask);
+///     // Register a struct implementing Task trait
+///     schedule.add(
+///         schedule.task(MyCleanupTask::new())
+///             .daily()
+///             .at("03:00")
+///             .name("cleanup")
+///     );
 ///
 ///     // Or use a closure
-///     schedule.call(|| async {
-///         println!("Hello!");
-///         Ok(())
-///     }).daily().at("03:00");
+///     schedule.add(
+///         schedule.call(|| async {
+///             println!("Hello!");
+///             Ok(())
+///         }).daily().at("03:00").name("greeting")
+///     );
 /// }
 /// ```
 pub struct Schedule {
@@ -118,27 +127,19 @@ impl Schedule {
 
     /// Register a trait-based scheduled task
     ///
+    /// Returns a `TaskBuilder` that allows fluent schedule configuration.
+    ///
     /// # Example
     /// ```rust,ignore
-    /// schedule.task(CleanupLogsTask);
+    /// schedule.add(
+    ///     schedule.task(CleanupLogsTask::new())
+    ///         .daily()
+    ///         .at("03:00")
+    ///         .name("cleanup:logs")
+    /// );
     /// ```
-    pub fn task<T: ScheduledTask + 'static>(&mut self, task: T) -> &mut Self {
-        let name = task.name().to_string();
-        let expression = task.schedule();
-        let description = task.description().map(|s| s.to_string());
-        let without_overlapping = task.without_overlapping();
-        let run_in_background = task.run_in_background();
-        let boxed_task: BoxedTask = Arc::new(task);
-
-        self.tasks.push(TaskEntry {
-            name,
-            expression,
-            task: boxed_task,
-            description,
-            without_overlapping,
-            run_in_background,
-        });
-        self
+    pub fn task<T: Task + 'static>(&self, task: T) -> TaskBuilder {
+        TaskBuilder::from_task(task)
     }
 
     /// Register a closure-based scheduled task
@@ -278,34 +279,12 @@ mod tests {
     use super::*;
     use async_trait::async_trait;
 
-    struct TestTask {
-        name: String,
-    }
-
-    impl TestTask {
-        fn new(name: &str) -> Self {
-            Self {
-                name: name.to_string(),
-            }
-        }
-    }
+    struct TestTask;
 
     #[async_trait]
-    impl ScheduledTask for TestTask {
-        fn name(&self) -> &str {
-            &self.name
-        }
-
-        fn schedule(&self) -> CronExpression {
-            CronExpression::every_minute()
-        }
-
+    impl Task for TestTask {
         async fn handle(&self) -> Result<(), FrameworkError> {
             Ok(())
-        }
-
-        fn description(&self) -> Option<&str> {
-            Some("A test task")
         }
     }
 
@@ -319,8 +298,8 @@ mod tests {
     #[test]
     fn test_schedule_add_trait_task() {
         let mut schedule = Schedule::new();
-        schedule.task(TestTask::new("test-1"));
-        schedule.task(TestTask::new("test-2"));
+        schedule.add(schedule.task(TestTask).every_minute().name("test-1"));
+        schedule.add(schedule.task(TestTask).every_minute().name("test-2"));
 
         assert_eq!(schedule.len(), 2);
         assert!(!schedule.is_empty());
@@ -343,7 +322,7 @@ mod tests {
     #[test]
     fn test_schedule_find_task() {
         let mut schedule = Schedule::new();
-        schedule.task(TestTask::new("find-me"));
+        schedule.add(schedule.task(TestTask).every_minute().name("find-me"));
 
         let found = schedule.find("find-me");
         assert!(found.is_some());
@@ -356,7 +335,7 @@ mod tests {
     #[tokio::test]
     async fn test_schedule_run_task() {
         let mut schedule = Schedule::new();
-        schedule.task(TestTask::new("run-me"));
+        schedule.add(schedule.task(TestTask).every_minute().name("run-me"));
 
         let result = schedule.run_task("run-me").await;
         assert!(result.is_some());
@@ -369,8 +348,8 @@ mod tests {
     #[tokio::test]
     async fn test_schedule_run_all_tasks() {
         let mut schedule = Schedule::new();
-        schedule.task(TestTask::new("task-1"));
-        schedule.task(TestTask::new("task-2"));
+        schedule.add(schedule.task(TestTask).every_minute().name("task-1"));
+        schedule.add(schedule.task(TestTask).every_minute().name("task-2"));
 
         let results = schedule.run_all_tasks().await;
         assert_eq!(results.len(), 2);

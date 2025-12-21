@@ -1,7 +1,7 @@
 //! Task Scheduler Registration
 //!
 //! Register your scheduled tasks here. Tasks can be defined as:
-//! - Struct implementing `ScheduledTask` trait (recommended for complex tasks)
+//! - Struct implementing `Task` trait (recommended for complex tasks)
 //! - Inline closures with fluent schedule configuration (quick tasks)
 //!
 //! # Examples
@@ -10,20 +10,27 @@
 //!
 //! ```rust,ignore
 //! // In src/tasks/cleanup_logs.rs
-//! use kit::{ScheduledTask, CronExpression, FrameworkError};
+//! use kit::{Task, TaskResult};
 //! use async_trait::async_trait;
 //!
 //! pub struct CleanupLogsTask;
 //!
 //! #[async_trait]
-//! impl ScheduledTask for CleanupLogsTask {
-//!     fn name(&self) -> &str { "cleanup:logs" }
-//!     fn schedule(&self) -> CronExpression { CronExpression::daily_at("03:00") }
-//!     async fn handle(&self) -> Result<(), FrameworkError> {
+//! impl Task for CleanupLogsTask {
+//!     async fn handle(&self) -> TaskResult {
 //!         // Your task logic
 //!         Ok(())
 //!     }
 //! }
+//!
+//! // Register in schedule.rs
+//! schedule.add(
+//!     schedule.task(CleanupLogsTask::new())
+//!         .daily()
+//!         .at("03:00")
+//!         .name("cleanup:logs")
+//!         .description("Cleans old log files daily")
+//! );
 //! ```
 //!
 //! ## Closure-Based Task
@@ -60,7 +67,13 @@ use kit::Schedule;
 /// Called by the schedule binary when starting the scheduler.
 pub fn register(schedule: &mut Schedule) {
     // Example: Register a trait-based task
-    // schedule.task(tasks::CleanupLogsTask::new());
+    // schedule.add(
+    //     schedule.task(tasks::CleanupLogsTask::new())
+    //         .daily()
+    //         .at("03:00")
+    //         .name("cleanup:logs")
+    //         .description("Cleans old log files daily")
+    // );
 
     // Example: Register a closure-based task
     // schedule.add(

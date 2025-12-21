@@ -854,12 +854,27 @@ pub fn task_template(file_name: &str, struct_name: &str) -> String {
 //! Created with `kit make:task {file_name}`
 
 use async_trait::async_trait;
-use kit::{{CronExpression, FrameworkError, ScheduledTask}};
+use kit::{{Task, TaskResult}};
 
 /// {struct_name} - A scheduled task
 ///
-/// Configure the schedule in the `schedule()` method.
 /// Implement your task logic in the `handle()` method.
+/// Register this task in `src/schedule.rs` with the fluent API.
+///
+/// # Example Registration
+///
+/// ```rust,ignore
+/// // In src/schedule.rs
+/// use crate::tasks::{file_name};
+///
+/// schedule.add(
+///     schedule.task({struct_name}::new())
+///         .daily()
+///         .at("03:00")
+///         .name("{file_name}")
+///         .description("TODO: Add task description")
+/// );
+/// ```
 pub struct {struct_name};
 
 impl {struct_name} {{
@@ -876,44 +891,12 @@ impl Default for {struct_name} {{
 }}
 
 #[async_trait]
-impl ScheduledTask for {struct_name} {{
-    fn name(&self) -> &str {{
-        "{file_name}"
-    }}
-
-    fn schedule(&self) -> CronExpression {{
-        // Configure when this task should run
-        //
-        // Examples:
-        //   CronExpression::every_minute()
-        //   CronExpression::every_n_minutes(5)
-        //   CronExpression::hourly()
-        //   CronExpression::hourly_at(30)        // At XX:30
-        //   CronExpression::daily()
-        //   CronExpression::daily_at("03:00")
-        //   CronExpression::weekly()
-        //   CronExpression::weekly_on(DayOfWeek::Monday)
-        //   CronExpression::monthly()
-        //   CronExpression::monthly_on(15)       // 15th of each month
-        //   CronExpression::parse("0 */2 * * *") // Every 2 hours
-        CronExpression::daily()
-    }}
-
-    async fn handle(&self) -> Result<(), FrameworkError> {{
+impl Task for {struct_name} {{
+    async fn handle(&self) -> TaskResult {{
         // TODO: Implement your task logic here
         println!("Running {struct_name}...");
         Ok(())
     }}
-
-    fn description(&self) -> Option<&str> {{
-        Some("TODO: Add task description")
-    }}
-
-    // Uncomment to prevent overlapping runs:
-    // fn without_overlapping(&self) -> bool {{ true }}
-
-    // Uncomment to run in background (non-blocking):
-    // fn run_in_background(&self) -> bool {{ true }}
 }}
 "#,
         file_name = file_name,

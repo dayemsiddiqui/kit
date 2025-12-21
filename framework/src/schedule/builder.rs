@@ -3,7 +3,7 @@
 //! Provides a fluent API for configuring scheduled tasks with closures.
 
 use super::expression::{CronExpression, DayOfWeek};
-use super::task::{BoxedFuture, BoxedTask, ClosureTask, TaskEntry, TaskResult};
+use super::task::{BoxedFuture, BoxedTask, ClosureTask, Task, TaskEntry, TaskResult};
 use std::sync::Arc;
 
 /// Builder for configuring scheduled tasks with a fluent API
@@ -59,6 +59,30 @@ impl TaskBuilder {
         Fut: std::future::Future<Output = TaskResult> + Send + 'static,
     {
         Self::new(move || Box::pin(f()))
+    }
+
+    /// Create a TaskBuilder from a struct implementing the Task trait
+    ///
+    /// This allows using the fluent schedule API with struct-based tasks.
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// schedule.add(
+    ///     schedule.task(CleanupLogsTask::new())
+    ///         .daily()
+    ///         .at("03:00")
+    ///         .name("cleanup:logs")
+    /// );
+    /// ```
+    pub fn from_task<T: Task + 'static>(task: T) -> Self {
+        Self {
+            task: Arc::new(task),
+            expression: CronExpression::every_minute(),
+            name: None,
+            description: None,
+            without_overlapping: false,
+            run_in_background: false,
+        }
     }
 
     // =========================================================================
