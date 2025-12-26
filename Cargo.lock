@@ -95,7 +95,7 @@ dependencies = [
 
 [[package]]
 name = "app"
-version = "0.1.59"
+version = "0.1.60"
 dependencies = [
  "async-trait",
  "dotenvy",
@@ -1389,7 +1389,7 @@ dependencies = [
 
 [[package]]
 name = "kit-cli"
-version = "0.1.59"
+version = "0.1.60"
 dependencies = [
  "chrono",
  "clap",
@@ -1410,7 +1410,7 @@ dependencies = [
 
 [[package]]
 name = "kit-macros"
-version = "0.1.59"
+version = "0.1.60"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1422,7 +1422,7 @@ dependencies = [
 
 [[package]]
 name = "kit-rs"
-version = "0.1.59"
+version = "0.1.60"
 dependencies = [
  "async-trait",
  "bcrypt",
