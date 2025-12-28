@@ -160,8 +160,6 @@ fn create_project(
         .map_err(|e| format!("Failed to create directories: {}", e))?;
     fs::create_dir_all(project_path.join("src/migrations"))
         .map_err(|e| format!("Failed to create directories: {}", e))?;
-    fs::create_dir_all(project_path.join("src/bin"))
-        .map_err(|e| format!("Failed to create directories: {}", e))?;
 
     // Frontend directories
     fs::create_dir_all(project_path.join("frontend/src/pages"))
@@ -327,12 +325,8 @@ fn create_project(
     )
     .map_err(|e| format!("Failed to write create_sessions_table migration: {}", e))?;
 
-    // Write src/bin/migrate.rs
-    fs::write(
-        project_path.join("src/bin/migrate.rs"),
-        templates::migrate_bin(),
-    )
-    .map_err(|e| format!("Failed to write src/bin/migrate.rs: {}", e))?;
+    // Note: migrations are now integrated into the main binary
+    // Run with: ./app migrate
 
     // === Frontend files ===
 

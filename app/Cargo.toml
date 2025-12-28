@@ -7,10 +7,6 @@ edition.workspace = true
 name = "app"
 path = "src/main.rs"
 
-[[bin]]
-name = "migrate"
-path = "src/bin/migrate.rs"
-
 [dependencies]
 kit = { path = "../framework", package = "kit-rs" }
 tokio = { version = "1", features = ["full"] }
@@ -19,3 +15,5 @@ sea-orm = { version = "1.0", features = ["sqlx-sqlite", "sqlx-postgres", "runtim
 serde = { version = "1.0", features = ["derive"] }
 async-trait = "0.1"
 dotenvy = "0.15"
+clap = { version = "4", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }

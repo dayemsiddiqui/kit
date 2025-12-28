@@ -8,15 +8,6 @@ description = "{description}"
 name = "{package_name}"
 path = "src/main.rs"
 
-[[bin]]
-name = "migrate"
-path = "src/bin/migrate.rs"
-
-# Uncomment when you create your first scheduled task with `kit make:task`
-# [[bin]]
-# name = "schedule"
-# path = "src/bin/schedule.rs"
-
 [dependencies]
 kit = {{ package = "kit-rs", version = "0.1" }}
 tokio = {{ version = "1", features = ["full"] }}
@@ -25,4 +16,5 @@ sea-orm = {{ version = "1.0", features = ["sqlx-sqlite", "sqlx-postgres", "runti
 serde = {{ version = "1.0", features = ["derive"] }}
 async-trait = "0.1"
 dotenvy = "0.15"
+clap = {{ version = "4", features = ["derive"] }}
 chrono = {{ version = "0.4", features = ["serde"] }}

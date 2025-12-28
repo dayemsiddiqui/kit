@@ -206,9 +206,7 @@ pub fn migrations_mod() -> &'static str {
     include_str!("files/backend/migrations/mod.rs.tpl")
 }
 
-pub fn migrate_bin() -> &'static str {
-    include_str!("files/backend/bin/migrate.rs.tpl")
-}
+// migrate_bin removed - migrations now integrated into main binary
 
 // Frontend templates
 
@@ -883,10 +881,7 @@ pub fn tasks_mod() -> &'static str {
     include_str!("files/backend/tasks/mod.rs.tpl")
 }
 
-/// Template for bin/schedule.rs binary
-pub fn schedule_bin() -> &'static str {
-    include_str!("files/backend/bin/schedule.rs.tpl")
-}
+// schedule_bin removed - scheduler now integrated into main binary
 
 /// Template for generating new scheduled task with make:task command
 pub fn task_template(file_name: &str, struct_name: &str) -> String {

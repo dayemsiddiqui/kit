@@ -16,24 +16,11 @@ pub fn run() {
         std::process::exit(1);
     }
 
-    // Check if migrate binary exists
-    if !Path::new("src/bin/migrate.rs").exists() {
-        eprintln!(
-            "{} Migration binary not found at src/bin/migrate.rs",
-            style("Error:").red().bold()
-        );
-        eprintln!(
-            "{}",
-            style("Make sure your project has the migration binary configured.").dim()
-        );
-        std::process::exit(1);
-    }
+    println!("{} Checking migration status...", style("->").cyan());
 
-    println!("{} Checking migration status...", style("→").cyan());
-
-    // Run cargo run --bin migrate status
+    // Run cargo run -- migrate:status (unified binary)
     let status = Command::new("cargo")
-        .args(["run", "--bin", "migrate", "--", "status"])
+        .args(["run", "--quiet", "--", "migrate:status"])
         .status()
         .expect("Failed to execute cargo command");
 

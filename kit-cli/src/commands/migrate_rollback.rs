@@ -16,33 +16,19 @@ pub fn run(step: u32) {
         std::process::exit(1);
     }
 
-    // Check if migrate binary exists
-    if !Path::new("src/bin/migrate.rs").exists() {
-        eprintln!(
-            "{} Migration binary not found at src/bin/migrate.rs",
-            style("Error:").red().bold()
-        );
-        eprintln!(
-            "{}",
-            style("Make sure your project has the migration binary configured.").dim()
-        );
-        std::process::exit(1);
-    }
-
     println!(
         "{} Rolling back {} migration(s)...",
-        style("→").cyan(),
+        style("->").cyan(),
         step
     );
 
-    // Run cargo run --bin migrate rollback <step>
+    // Run cargo run -- migrate:rollback <step> (unified binary)
     let status = Command::new("cargo")
         .args([
             "run",
-            "--bin",
-            "migrate",
+            "--quiet",
             "--",
-            "rollback",
+            "migrate:rollback",
             &step.to_string(),
         ])
         .status()

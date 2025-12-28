@@ -42,7 +42,7 @@ COPY src/ ./src/
 # Copy frontend build output to public directory
 COPY --from=frontend-builder /app/frontend/dist ./public/assets
 
-# Build the application
+# Build the application (single unified binary)
 RUN rm ./target/release/deps/{package_name}* 2>/dev/null || true && cargo build --release
 
 # ==========================================
@@ -79,4 +79,9 @@ ENV SERVER_PORT=8080
 
 EXPOSE 8080
 
+# Default: Run web server with auto-migrations
+# Override with different commands for other modes:
+#   docker run myapp ./app serve --no-migrate  # Skip migrations
+#   docker run myapp ./app migrate             # Run migrations only
+#   docker run myapp ./app schedule:work       # Run scheduler daemon
 CMD ["./app"]

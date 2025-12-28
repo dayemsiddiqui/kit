@@ -34,8 +34,6 @@ pub fn run(name: String) {
     let task_file = tasks_dir.join(format!("{}.rs", file_name));
     let mod_file = tasks_dir.join("mod.rs");
     let schedule_file = Path::new("src/schedule.rs");
-    let bin_dir = Path::new("src/bin");
-    let schedule_bin_file = bin_dir.join("schedule.rs");
 
     // Ensure we're in a Kit project (check for src directory)
     if !Path::new("src").exists() {
@@ -89,31 +87,8 @@ pub fn run(name: String) {
         println!("{} Created src/schedule.rs", style("✓").green());
     }
 
-    // Create bin directory and schedule binary if they don't exist
-    if !bin_dir.exists() {
-        if let Err(e) = fs::create_dir_all(bin_dir) {
-            eprintln!(
-                "{} Failed to create bin directory: {}",
-                style("Error:").red().bold(),
-                e
-            );
-            std::process::exit(1);
-        }
-        println!("{} Created src/bin/", style("✓").green());
-    }
-
-    if !schedule_bin_file.exists() {
-        let schedule_bin_content = templates::schedule_bin();
-        if let Err(e) = fs::write(&schedule_bin_file, schedule_bin_content) {
-            eprintln!(
-                "{} Failed to create schedule binary: {}",
-                style("Error:").red().bold(),
-                e
-            );
-            std::process::exit(1);
-        }
-        println!("{} Created src/bin/schedule.rs", style("✓").green());
-    }
+    // Note: Scheduler is now integrated into the main binary
+    // Run with: ./app schedule:work
 
     // Check if task file already exists
     if task_file.exists() {
