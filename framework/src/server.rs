@@ -121,6 +121,13 @@ async fn handle_request(
 ) -> hyper::Response<Full<Bytes>> {
     let method = req.method().clone();
     let path = req.uri().path().to_string();
+    let query = req.uri().query().unwrap_or("");
+
+    // Built-in health check endpoint at /_kit/health
+    // Uses framework prefix to avoid conflicts with user-defined routes
+    if path == "/_kit/health" && method == hyper::Method::GET {
+        return health_response(query).await;
+    }
 
     // Set up Inertia context from request headers
     let is_inertia = req
@@ -194,4 +201,61 @@ async fn handle_request(
     InertiaContext::clear();
 
     response
+}
+
+/// Built-in health check endpoint at /_kit/health
+/// Returns {"status": "ok", "timestamp": "..."} by default
+/// Add ?db=true to also check database connectivity (/_kit/health?db=true)
+async fn health_response(query: &str) -> hyper::Response<Full<Bytes>> {
+    use chrono::Utc;
+    use serde_json::json;
+
+    let timestamp = Utc::now().to_rfc3339();
+    let check_db = query.contains("db=true");
+
+    let mut response = json!({
+        "status": "ok",
+        "timestamp": timestamp
+    });
+
+    if check_db {
+        // Try to check database connection
+        match check_database_health().await {
+            Ok(_) => {
+                response["database"] = json!("connected");
+            }
+            Err(e) => {
+                response["database"] = json!("error");
+                response["database_error"] = json!(e);
+            }
+        }
+    }
+
+    let body = serde_json::to_string(&response).unwrap_or_else(|_| r#"{"status":"ok"}"#.to_string());
+
+    hyper::Response::builder()
+        .status(200)
+        .header("Content-Type", "application/json")
+        .body(Full::new(Bytes::from(body)))
+        .unwrap()
+}
+
+/// Check database health by attempting a simple query
+async fn check_database_health() -> Result<(), String> {
+    use crate::database::DB;
+    use sea_orm::ConnectionTrait;
+
+    if !DB::is_connected() {
+        return Err("Database not initialized".to_string());
+    }
+
+    let conn = DB::connection().map_err(|e| e.to_string())?;
+
+    // Execute a simple query to verify connection is alive
+    conn.inner()
+        .execute_unprepared("SELECT 1")
+        .await
+        .map_err(|e| format!("Database query failed: {}", e))?;
+
+    Ok(())
 }
