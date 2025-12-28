@@ -34,3 +34,4 @@ pretty_assertions = "1.4"
 chrono = { version = "0.4", features = ["serde"] }
 bcrypt = "0.15"
 rand = "0.8"
+clap = { version = "4", features = ["derive"] }

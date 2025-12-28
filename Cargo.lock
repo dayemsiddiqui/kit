@@ -1430,6 +1430,7 @@ dependencies = [
  "bcrypt",
  "bytes",
  "chrono",
+ "clap",
  "dotenvy",
  "http",
  "http-body-util",

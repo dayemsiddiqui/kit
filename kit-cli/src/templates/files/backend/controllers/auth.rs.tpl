@@ -38,42 +38,42 @@ pub async fn login(req: Request) -> Response {
 
     // Validate the form
     if let Err(errors) = form.validate() {
-        return inertia_response!(
+        return Ok(inertia_response!(
             "auth/Login",
             LoginProps {
                 errors: Some(serde_json::json!(errors))
             }
-        )
-        .status(422);
+        )?
+        .status(422));
     }
 
     // Find user by email
     let user = match User::find_by_email(&form.email).await? {
         Some(u) => u,
         None => {
-            return inertia_response!(
+            return Ok(inertia_response!(
                 "auth/Login",
                 LoginProps {
                     errors: Some(serde_json::json!({
                         "email": ["These credentials do not match our records."]
                     }))
                 }
-            )
-            .status(422);
+            )?
+            .status(422));
         }
     };
 
     // Verify password
     if !user.verify_password(&form.password)? {
-        return inertia_response!(
+        return Ok(inertia_response!(
             "auth/Login",
             LoginProps {
                 errors: Some(serde_json::json!({
                     "email": ["These credentials do not match our records."]
                 }))
             }
-        )
-        .status(422);
+        )?
+        .status(422));
     }
 
     // Log in the user
@@ -86,7 +86,7 @@ pub async fn login(req: Request) -> Response {
         user.update_remember_token(Some(token)).await?;
     }
 
-    redirect!("/dashboard")
+    redirect!("/dashboard").into()
 }
 
 // ============================================================================
@@ -120,39 +120,39 @@ pub async fn register(req: Request) -> Response {
 
     // Validate the form
     if let Err(errors) = form.validate() {
-        return inertia_response!(
+        return Ok(inertia_response!(
             "auth/Register",
             RegisterProps {
                 errors: Some(serde_json::json!(errors))
             }
-        )
-        .status(422);
+        )?
+        .status(422));
     }
 
     // Check password confirmation
     if form.password != form.password_confirmation {
-        return inertia_response!(
+        return Ok(inertia_response!(
             "auth/Register",
             RegisterProps {
                 errors: Some(serde_json::json!({
                     "password_confirmation": ["Passwords do not match."]
                 }))
             }
-        )
-        .status(422);
+        )?
+        .status(422));
     }
 
     // Check if email already exists
     if User::find_by_email(&form.email).await?.is_some() {
-        return inertia_response!(
+        return Ok(inertia_response!(
             "auth/Register",
             RegisterProps {
                 errors: Some(serde_json::json!({
                     "email": ["This email is already registered."]
                 }))
             }
-        )
-        .status(422);
+        )?
+        .status(422));
     }
 
     // Create user
@@ -161,7 +161,7 @@ pub async fn register(req: Request) -> Response {
     // Log in the new user
     Auth::login(user.id);
 
-    redirect!("/dashboard")
+    redirect!("/dashboard").into()
 }
 
 // ============================================================================
@@ -171,5 +171,5 @@ pub async fn register(req: Request) -> Response {
 #[handler]
 pub async fn logout(_req: Request) -> Response {
     Auth::logout();
-    redirect!("/")
+    redirect!("/").into()
 }

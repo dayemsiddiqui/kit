@@ -18,3 +18,4 @@ async-trait = "0.1"
 dotenvy = "0.15"
 clap = {{ version = "4", features = ["derive"] }}
 chrono = {{ version = "0.4", features = ["serde"] }}
+validator = {{ version = "0.18", features = ["derive"] }}

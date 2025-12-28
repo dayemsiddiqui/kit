@@ -1,6 +1,6 @@
 //! Dashboard controller
 
-use kit::{handler, inertia_response, Auth, InertiaProps, Request, Response};
+use kit::{handler, inertia_response, Auth, InertiaProps, Model, Request, Response};
 use serde::Serialize;
 
 use crate::models::user::{Entity as UserEntity, User};

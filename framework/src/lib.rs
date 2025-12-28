@@ -1,3 +1,4 @@
+pub mod app;
 pub mod auth;
 pub mod cache;
 pub mod config;
@@ -15,6 +16,7 @@ pub mod server;
 pub mod session;
 pub mod testing;
 
+pub use app::Application;
 pub use auth::{Auth, Authenticatable, AuthMiddleware, GuestMiddleware, UserProvider};
 pub use cache::{Cache, CacheConfig, CacheStore, InMemoryCache, RedisCache};
 pub use config::{env, env_optional, env_required, AppConfig, Config, Environment, ServerConfig};
