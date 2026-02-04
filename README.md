@@ -56,6 +56,41 @@ async fn store(_req: Request) -> Response {
 - **Modern frontend** — First-class Inertia.js + React with automatic TypeScript types
 - **Rust performance** — All the safety and speed, none of the ceremony
 
+## Durable Workflows
+
+Kit includes a Postgres-backed workflow engine with durable steps and retries.
+
+```rust
+use kit::{workflow, workflow_step, start_workflow, FrameworkError};
+
+#[workflow_step]
+async fn fetch_user(user_id: i64) -> Result<String, FrameworkError> {
+    Ok(format!("user:{}", user_id))
+}
+
+#[workflow_step]
+async fn send_welcome_email(user: String) -> Result<(), FrameworkError> {
+    println!("Sending email to {}", user);
+    Ok(())
+}
+
+#[workflow]
+async fn welcome_flow(user_id: i64) -> Result<(), FrameworkError> {
+    let user = fetch_user(user_id).await?;
+    send_welcome_email(user).await?;
+    Ok(())
+}
+
+// Enqueue
+// let handle = start_workflow!(welcome_flow, 123).await?;
+```
+
+Run the worker in production:
+
+```bash
+kit workflow:work
+```
+
 ## End-to-End Type Safety
 
 Kit provides automatic TypeScript type generation from your Rust structs. Define your props once in Rust, and use them with full type safety in React.

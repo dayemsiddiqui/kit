@@ -27,6 +27,7 @@ Welcome to the Kit framework documentation. Kit is a modern, Laravel-inspired we
 - [Service Container](./service-container.md) *(coming soon)*
 - [Configuration](./configuration.md) *(coming soon)*
 - [Testing](./testing.md) *(coming soon)*
+- [Workflows](./workflows.md)
 
 ### CLI Reference
 - [CLI Commands](./cli.md) *(coming soon)*
