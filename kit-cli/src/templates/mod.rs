@@ -52,6 +52,14 @@ pub fn home_controller() -> &'static str {
     include_str!("files/backend/controllers/home.rs.tpl")
 }
 
+pub fn create_workflows_migration() -> &'static str {
+    include_str!("files/backend/migrations/create_workflows_table.rs.tpl")
+}
+
+pub fn create_workflow_steps_migration() -> &'static str {
+    include_str!("files/backend/migrations/create_workflow_steps_table.rs.tpl")
+}
+
 // Middleware templates
 
 pub fn middleware_mod() -> &'static str {

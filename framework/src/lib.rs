@@ -12,9 +12,12 @@ pub mod inertia;
 pub mod middleware;
 pub mod routing;
 pub mod schedule;
+pub mod workflow;
 pub mod server;
 pub mod session;
 pub mod testing;
+
+extern crate self as kit;
 
 pub use app::Application;
 pub use auth::{Auth, Authenticatable, AuthMiddleware, GuestMiddleware, UserProvider};
@@ -47,6 +50,10 @@ pub use routing::{
     IntoGroupItem, RouteBuilder, RouteDefBuilder, Router,
 };
 pub use schedule::{CronExpression, DayOfWeek, Schedule, Task, TaskBuilder, TaskEntry, TaskResult};
+pub use workflow::{
+    start_named, StepStatus, WorkflowConfig, WorkflowContext, WorkflowHandle, WorkflowStatus,
+    WorkflowWorker,
+};
 pub use server::Server;
 
 // Re-export async_trait for middleware implementations
@@ -75,6 +82,8 @@ pub use kit_macros::injectable;
 pub use kit_macros::redirect;
 pub use kit_macros::request;
 pub use kit_macros::service;
+pub use kit_macros::workflow;
+pub use kit_macros::workflow_step;
 pub use kit_macros::FormRequest as FormRequestDerive;
 pub use kit_macros::InertiaProps;
 pub use kit_macros::kit_test;

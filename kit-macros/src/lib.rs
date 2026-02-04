@@ -21,6 +21,8 @@ mod request;
 mod service;
 mod test_macro;
 mod utils;
+mod workflow;
+mod workflow_step;
 
 /// Derive macro for generating `Serialize` implementation for Inertia props
 ///
@@ -334,6 +336,18 @@ pub fn request(attr: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn kit_test(attr: TokenStream, input: TokenStream) -> TokenStream {
     kit_test::kit_test_impl(attr, input)
+}
+
+/// Attribute macro for defining durable workflows
+#[proc_macro_attribute]
+pub fn workflow(attr: TokenStream, input: TokenStream) -> TokenStream {
+    workflow::workflow_impl(attr, input)
+}
+
+/// Attribute macro for defining durable workflow steps
+#[proc_macro_attribute]
+pub fn workflow_step(attr: TokenStream, input: TokenStream) -> TokenStream {
+    workflow_step::workflow_step_impl(attr, input)
 }
 
 /// Group related tests with a descriptive name

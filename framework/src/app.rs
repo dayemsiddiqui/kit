@@ -75,6 +75,9 @@ enum Commands {
     /// List all registered scheduled tasks
     #[command(name = "schedule:list")]
     ScheduleList,
+    /// Run the workflow worker daemon
+    #[command(name = "workflow:work")]
+    WorkflowWork,
 }
 
 /// Application builder for Kit framework
@@ -261,6 +264,9 @@ where
             Some(Commands::ScheduleList) => {
                 Self::list_scheduled_tasks().await;
             }
+            Some(Commands::WorkflowWork) => {
+                Self::run_workflow_worker_internal(bootstrap_fn).await;
+            }
         }
     }
 
@@ -397,5 +403,26 @@ where
         println!();
         eprintln!("No scheduled tasks registered.");
         eprintln!("Create a scheduled task with: kit make:task <name>");
+    }
+
+    async fn run_workflow_worker_internal(
+        bootstrap_fn: Option<Box<dyn FnOnce() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>>,
+    ) {
+        if let Some(bootstrap_fn) = bootstrap_fn {
+            bootstrap_fn().await;
+        }
+
+        println!("==============================================");
+        println!("  Kit Workflow Worker");
+        println!("==============================================");
+        println!();
+        println!("  Press Ctrl+C to stop");
+        println!();
+        println!("==============================================");
+
+        if let Err(e) = crate::workflow::WorkflowWorker::work_loop().await {
+            eprintln!("Workflow worker error: {}", e);
+            std::process::exit(1);
+        }
     }
 }
