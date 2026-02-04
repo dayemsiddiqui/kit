@@ -31,8 +31,13 @@ pub fn cargo_toml(package_name: &str, description: &str, author: &str) -> String
     )
 }
 
-pub fn main_rs() -> &'static str {
-    include_str!("files/backend/main.rs.tpl")
+pub fn cmd_main_rs(package_name: &str) -> String {
+    include_str!("files/backend/cmd/main.rs.tpl")
+        .replace("{package_name}", package_name)
+}
+
+pub fn lib_rs() -> &'static str {
+    include_str!("files/backend/lib.rs.tpl")
 }
 
 pub fn routes_rs() -> &'static str {

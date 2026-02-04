@@ -48,6 +48,9 @@ enum Commands {
         #[arg(long)]
         skip_types: bool,
     },
+    /// Run the web server (app runtime)
+    #[command(name = "web:run")]
+    WebRun,
     /// Generate TypeScript types from Rust InertiaProps structs
     GenerateTypes {
         /// Output file path (default: frontend/src/types/inertia-props.ts)
@@ -168,6 +171,9 @@ fn main() {
             skip_types,
         } => {
             commands::serve::run(port, frontend_port, backend_only, frontend_only, skip_types);
+        }
+        Commands::WebRun => {
+            commands::web_run::run();
         }
         Commands::GenerateTypes { output, watch } => {
             commands::generate_types::run(output, watch);

@@ -148,6 +148,8 @@ fn create_project(
 
     // Create directory structure
     // Backend directories
+    fs::create_dir_all(project_path.join("cmd"))
+        .map_err(|e| format!("Failed to create directories: {}", e))?;
     fs::create_dir_all(project_path.join("src/controllers"))
         .map_err(|e| format!("Failed to create directories: {}", e))?;
     fs::create_dir_all(project_path.join("src/config"))
@@ -192,9 +194,16 @@ fn create_project(
     fs::write(project_path.join(".env.example"), templates::env_example())
         .map_err(|e| format!("Failed to write .env.example: {}", e))?;
 
-    // Write src/main.rs
-    fs::write(project_path.join("src/main.rs"), templates::main_rs())
-        .map_err(|e| format!("Failed to write src/main.rs: {}", e))?;
+    // Write cmd/main.rs
+    fs::write(
+        project_path.join("cmd/main.rs"),
+        templates::cmd_main_rs(package_name),
+    )
+    .map_err(|e| format!("Failed to write cmd/main.rs: {}", e))?;
+
+    // Write src/lib.rs
+    fs::write(project_path.join("src/lib.rs"), templates::lib_rs())
+        .map_err(|e| format!("Failed to write src/lib.rs: {}", e))?;
 
     // Write src/routes.rs
     fs::write(project_path.join("src/routes.rs"), templates::routes_rs())

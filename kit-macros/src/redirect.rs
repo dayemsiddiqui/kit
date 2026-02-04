@@ -47,7 +47,7 @@ fn validate_route_exists(route_name: &str, span: Span) -> Result<(), syn::Error>
 
     let project_root = PathBuf::from(&manifest_dir);
 
-    // Scan main.rs for route definitions
+    // Scan routes.rs (or main entrypoint) for route definitions
     let available_routes = extract_route_names(&project_root);
 
     if available_routes.is_empty() {
@@ -75,11 +75,13 @@ fn validate_route_exists(route_name: &str, span: Span) -> Result<(), syn::Error>
 }
 
 fn extract_route_names(project_root: &PathBuf) -> Vec<String> {
-    // Try routes.rs first, fall back to main.rs
+    // Try routes.rs first, fall back to cmd/main.rs or legacy src/main.rs
     let routes_rs = project_root.join("src").join("routes.rs");
+    let cmd_main_rs = project_root.join("cmd").join("main.rs");
     let main_rs = project_root.join("src").join("main.rs");
 
     let content = std::fs::read_to_string(&routes_rs)
+        .or_else(|_| std::fs::read_to_string(&cmd_main_rs))
         .or_else(|_| std::fs::read_to_string(&main_rs))
         .unwrap_or_default();
 

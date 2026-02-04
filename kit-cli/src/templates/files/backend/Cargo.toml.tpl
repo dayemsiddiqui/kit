@@ -6,7 +6,7 @@ description = "{description}"
 {authors_line}
 [[bin]]
 name = "{package_name}"
-path = "src/main.rs"
+path = "cmd/main.rs"
 
 [dependencies]
 kit = {{ package = "kit-rs", version = "0.1" }}

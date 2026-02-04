@@ -34,9 +34,11 @@ WORKDIR /app/{package_name}
 COPY Cargo.toml Cargo.lock ./
 
 # Build dependencies only (for caching)
-RUN cargo build --release && rm src/*.rs
+RUN mkdir -p cmd && echo "fn main() {}" > cmd/main.rs
+RUN cargo build --release && rm -f src/*.rs cmd/main.rs
 
 # Copy actual source code
+COPY cmd/ ./cmd/
 COPY src/ ./src/
 
 # Copy frontend build output to public directory

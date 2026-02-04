@@ -31,7 +31,7 @@ use crate::providers::DatabaseUserProvider;
 
 /// Register global middleware and services
 ///
-/// Called from main.rs before `Server::from_config()`.
+/// Called from cmd/main.rs before `Server::from_config()`.
 /// Middleware and services registered here can use environment variables, config files, etc.
 pub async fn register() {
     // Initialize database connection

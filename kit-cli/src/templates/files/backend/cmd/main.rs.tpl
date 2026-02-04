@@ -1,16 +1,8 @@
 //! Kit Application Entry Point
 
 use kit::Application;
-use sea_orm_migration::prelude::MigratorTrait;
 
-mod actions;
-mod bootstrap;
-mod config;
-mod controllers;
-mod middleware;
-mod migrations;
-mod models;
-mod routes;
+use {package_name}::{bootstrap, config, migrations, routes};
 
 #[tokio::main]
 async fn main() {
