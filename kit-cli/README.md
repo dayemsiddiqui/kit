@@ -39,8 +39,10 @@ kit new myapp --no-git
 myapp/
 ├── Cargo.toml
 ├── .gitignore
+├── cmd/
+│   └── main.rs
 └── src/
-    ├── main.rs
+    ├── lib.rs
     └── controllers/
         ├── mod.rs
         └── home.rs

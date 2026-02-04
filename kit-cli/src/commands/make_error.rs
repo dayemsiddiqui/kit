@@ -134,7 +134,7 @@ pub fn run(name: String) {
     if created_dir {
         println!(
             "{}",
-            style("Note: Make sure to add `mod errors;` to your src/main.rs").yellow()
+            style("Note: Make sure to add `mod errors;` to your src/lib.rs").yellow()
         );
         println!();
     }

@@ -305,15 +305,17 @@ impl Middleware for TimingMiddleware {
 The recommended file structure for middleware:
 
 ```
+cmd/
+└── main.rs
 src/
+├── lib.rs
 ├── middleware/
 │   ├── mod.rs          # Re-export all middleware
 │   ├── auth.rs         # Authentication middleware
 │   ├── logging.rs      # Logging middleware
 │   └── cors.rs         # CORS middleware
 ├── bootstrap.rs        # Register global middleware
-├── routes.rs           # Apply route-level middleware
-└── main.rs
+└── routes.rs           # Apply route-level middleware
 ```
 
 **src/middleware/mod.rs:**

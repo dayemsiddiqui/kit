@@ -44,6 +44,13 @@ enum Commands {
         #[arg(long)]
         no_migrate: bool,
     },
+    /// Run the web server (alias for serve)
+    #[command(name = "web:run")]
+    WebRun {
+        /// Skip running migrations on startup
+        #[arg(long)]
+        no_migrate: bool,
+    },
     /// Run pending database migrations
     Migrate,
     /// Show migration status
@@ -195,6 +202,7 @@ where
     ///
     /// This parses CLI arguments and executes the appropriate command:
     /// - `serve` (default): Run the web server
+    /// - `web:run`: Run the web server (alias for serve)
     /// - `migrate`: Run pending migrations
     /// - `migrate:status`: Show migration status
     /// - `migrate:rollback`: Rollback migrations
@@ -220,12 +228,15 @@ where
         }
 
         match cli.command {
-            None | Some(Commands::Serve { no_migrate: false }) => {
+            None
+            | Some(Commands::Serve { no_migrate: false })
+            | Some(Commands::WebRun { no_migrate: false }) => {
                 // Default: run server with auto-migrate
                 Self::run_migrations_silent::<M>().await;
                 Self::run_server_internal(bootstrap_fn, routes_fn).await;
             }
-            Some(Commands::Serve { no_migrate: true }) => {
+            Some(Commands::Serve { no_migrate: true })
+            | Some(Commands::WebRun { no_migrate: true }) => {
                 // Run server without migrations
                 Self::run_server_internal(bootstrap_fn, routes_fn).await;
             }

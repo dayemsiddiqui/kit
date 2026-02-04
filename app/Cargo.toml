@@ -5,7 +5,7 @@ edition.workspace = true
 
 [[bin]]
 name = "app"
-path = "src/main.rs"
+path = "cmd/main.rs"
 
 [dependencies]
 kit = { path = "../framework", package = "kit-rs" }

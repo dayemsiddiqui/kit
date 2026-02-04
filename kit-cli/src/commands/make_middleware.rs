@@ -110,8 +110,8 @@ pub fn run(name: String) {
     println!("     use crate::middleware::{};", struct_name);
     println!("     .get(\"/path\", handler).middleware({})", struct_name);
     println!();
-    println!("  {} Or apply globally in main.rs:", style("2.").dim());
-    println!("     .middleware(middleware::{})", struct_name);
+    println!("  {} Or apply globally in bootstrap.rs:", style("2.").dim());
+    println!("     global_middleware!(middleware::{})", struct_name);
     println!();
 }
 
