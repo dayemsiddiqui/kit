@@ -297,6 +297,22 @@ pub async fn mark_failed(id: i64, error: &str) -> Result<(), FrameworkError> {
 pub async fn load_step(
     workflow_id: i64,
     step_index: i32,
+    step_name: &str,
+) -> Result<Option<workflow_steps::Model>, FrameworkError> {
+    let db = DB::connection()?;
+    workflow_steps::Entity::find()
+        .filter(workflow_steps::Column::WorkflowId.eq(workflow_id))
+        .filter(workflow_steps::Column::StepIndex.eq(step_index))
+        .filter(workflow_steps::Column::StepName.eq(step_name))
+        .one(db.inner())
+        .await
+        .map_err(|e| FrameworkError::database(e.to_string()))
+}
+
+/// Load any step by workflow + index (used to detect mismatches)
+pub async fn load_step_by_index(
+    workflow_id: i64,
+    step_index: i32,
 ) -> Result<Option<workflow_steps::Model>, FrameworkError> {
     let db = DB::connection()?;
     workflow_steps::Entity::find()

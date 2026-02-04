@@ -69,7 +69,7 @@ impl WorkflowContext {
         let workflow_id = self.inner.workflow_id;
         let step_index = self.inner.step_index.fetch_add(1, Ordering::SeqCst);
 
-        if let Some(existing) = store::load_step(workflow_id, step_index).await? {
+        if let Some(existing) = store::load_step(workflow_id, step_index, step_name).await? {
             if let Some(status) = StepStatus::from_str(&existing.status) {
                 if status == StepStatus::Succeeded {
                     let output_json = existing.output.ok_or_else(|| {
@@ -88,6 +88,15 @@ impl WorkflowContext {
 
             store::update_step_running(existing, &input_json).await?;
         } else {
+            if let Some(other) = store::load_step_by_index(workflow_id, step_index).await? {
+                if other.step_name != step_name {
+                    return Err(FrameworkError::internal(format!(
+                        "Workflow step mismatch at index {}: expected '{}', found '{}'. \
+                         Workflow steps must be deterministic.",
+                        step_index, step_name, other.step_name
+                    )));
+                }
+            }
             store::insert_step_running(workflow_id, step_index, step_name, &input_json).await?;
         }
 
@@ -103,14 +112,14 @@ impl WorkflowContext {
                         e
                     ))
                 })?;
-                if let Some(step) = store::load_step(workflow_id, step_index).await? {
+                if let Some(step) = store::load_step(workflow_id, step_index, step_name).await? {
                     store::mark_step_succeeded(step.id, &output_json).await?;
                 }
                 store::refresh_lock(workflow_id, self.inner.lock_timeout).await?;
                 Ok(value)
             }
             Err(err) => {
-                if let Some(step) = store::load_step(workflow_id, step_index).await? {
+                if let Some(step) = store::load_step(workflow_id, step_index, step_name).await? {
                     store::mark_step_failed(step.id, &err.to_string()).await?;
                 }
                 store::refresh_lock(workflow_id, self.inner.lock_timeout).await?;
