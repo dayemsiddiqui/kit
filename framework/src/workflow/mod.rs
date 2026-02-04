@@ -112,10 +112,10 @@ impl WorkflowWorker {
 
         loop {
             let permit = semaphore.clone().acquire_owned().await.unwrap();
-            let claim = store::claim_next_workflow(&self.worker_id, &self.config).await?;
+            let claim = store::claim_next_workflow(&self.worker_id, &self.config).await;
 
             match claim {
-                Some(claimed) => {
+                Ok(Some(claimed)) => {
                     let config = self.config.clone();
                     let worker_id = self.worker_id.clone();
                     tokio::spawn(async move {
@@ -125,7 +125,12 @@ impl WorkflowWorker {
                         drop(permit);
                     });
                 }
-                None => {
+                Ok(None) => {
+                    drop(permit);
+                    tokio::time::sleep(poll).await;
+                }
+                Err(err) => {
+                    eprintln!("Workflow claim error: {}", err);
                     drop(permit);
                     tokio::time::sleep(poll).await;
                 }
