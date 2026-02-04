@@ -76,4 +76,5 @@ Retry backoff is linear: `attempt * WORKFLOW_RETRY_BACKOFF_SECS`.
 
 - The worker requires **Postgres** (uses `FOR UPDATE SKIP LOCKED`).
 - Steps should be deterministic and side‑effect safe since retries resume at the last failed step.
+- Step caching is keyed by **step name + index**. If a retry executes a different step at the same index, the worker returns an error. Prefer stable step order and put branching logic inside a step when possible.
 - Outputs and inputs are stored as JSON TEXT, so return types must be serde‑serializable.
