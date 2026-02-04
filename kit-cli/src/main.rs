@@ -150,6 +150,12 @@ enum Commands {
     /// List all registered scheduled tasks
     #[command(name = "schedule:list")]
     ScheduleList,
+    /// Start the workflow worker daemon
+    #[command(name = "workflow:work")]
+    WorkflowWork,
+    /// Install workflow migrations
+    #[command(name = "workflow:install")]
+    WorkflowInstall,
 }
 
 fn main() {
@@ -234,6 +240,12 @@ fn main() {
         }
         Commands::ScheduleList => {
             commands::schedule_list::run();
+        }
+        Commands::WorkflowWork => {
+            commands::workflow_work::run();
+        }
+        Commands::WorkflowInstall => {
+            commands::workflow_install::run();
         }
     }
 }
